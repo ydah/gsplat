@@ -11,6 +11,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P0-5 | Complete | 2026-07-23 | allclose/golden/backend test helpers and Ruby 3.2–4.0 CI matrix |
 | P1-1 | Complete | 2026-07-23 | Autograd Variable/Function/Context, branching, multi-output, no_grad, graph release |
 | P1-2 | Complete | 2026-07-23 | Batched quaternion VJPs and closed-form 2x2/3x3 matrix operations |
+| P1-3 | Complete (golden pending) | 2026-07-23 | Covariance/precision fwd+bwd, triu output, float64 gradcheck |
 
 ## Phase gates
 
@@ -21,3 +22,9 @@ This file is the restart point for implementation sessions. Read it after `READM
 - Golden status: generator dry-run and syntax checks pass; complete CUDA output remains pending per
   `tools/README.md` because this host has no CUDA and the temporary PyTorch install exceeded disk capacity.
 - Design differences: recorded in `docs/DECISIONS.md`.
+
+### P1 — Complete (golden-data gate pending)
+
+- L1/L2: analytic properties and float64 central differences pass.
+- L3: `quat_covar_full.npz` test is present and skipped until `tools/README.md` CUDA generation is run.
+- Full suite and lint evidence are recorded in the P1-3 commit.

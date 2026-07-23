@@ -10,6 +10,7 @@ class GemspecTest < Minitest::Test
   def test_release_metadata
     assert_equal Gem::Version.new("1.0.0"), @specification.version
     assert_equal "https://github.com/ydah/gsplat", @specification.homepage
+    assert_equal ["Apache-2.0"], @specification.licenses
     assert_equal @specification.homepage, @specification.metadata.fetch("source_code_uri")
     assert_equal "true", @specification.metadata.fetch("rubygems_mfa_required")
   end

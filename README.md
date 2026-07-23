@@ -193,3 +193,7 @@ cannot generate CUDA raster fixtures; the generator, exact commands, and documen
 [docs/DECISIONS.md](docs/DECISIONS.md), and phase evidence is tracked in
 [docs/PROGRESS.md](docs/PROGRESS.md). See [docs/BENCHMARKS.md](docs/BENCHMARKS.md) for measured
 performance and [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md) for the G1–G6 status.
+
+## License
+
+Gsplat is available under the [Apache License 2.0](LICENSE.txt).

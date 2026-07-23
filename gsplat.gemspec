@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "A CPU differentiable 3D Gaussian splatting renderer, trainer, and IO toolkit " \
                      "with Numo::NArray and optional OpenMP acceleration."
   spec.homepage = "https://github.com/ydah/gsplat"
-  spec.license = "MIT"
+  spec.license = "Apache-2.0"
   spec.required_ruby_version = ">= 3.2.0"
   spec.metadata["rubygems_mfa_required"] = "true"
   spec.metadata["source_code_uri"] = spec.homepage

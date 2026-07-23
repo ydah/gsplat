@@ -41,6 +41,7 @@ def all_cases() -> list[Case]:
             Case("raster_features8", "raster", {"channels": 8}, requires_cuda=True),
             Case("raster_features32", "raster", {"channels": 32}, requires_cuda=True),
             Case("raster_features40", "raster", {"channels": 40}, requires_cuda=True),
+            Case("raster_indices", "raster_indices", {}, requires_cuda=True),
             Case("render_fisheye_distorted", "fisheye_distorted", {}, requires_cuda=True),
             Case("distance_order", "distance_order", {}),
             Case("hit_distance_modes", "hit_distance", {}),
@@ -109,6 +110,7 @@ def generate(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
         "proj_covars": _projection_covars_case,
         "isect": _isect_case,
         "raster": _raster_case,
+        "raster_indices": _raster_indices_case,
         "fisheye_distorted": _fisheye_distorted_case,
         "distance_order": _distance_order_case,
         "hit_distance": _hit_distance_case,
@@ -317,6 +319,50 @@ def _raster_case(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
         "grad_colors": colors.grad,
         "grad_opacities": opacities.grad,
         "grad_backgrounds": backgrounds.grad,
+    }
+
+
+def _raster_indices_case(_case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
+    torch = runtime["torch"]
+    from gsplat.cuda._wrapper import (
+        fully_fused_projection,
+        isect_offset_encode,
+        isect_tiles,
+        rasterize_to_indices_in_range,
+    )
+
+    scene = _scene(runtime, 96)
+    radii, means2d, depths, conics, _ = fully_fused_projection(
+        scene["means"], None, scene["quats"], scene["scales"], scene["viewmats"], scene["ks"],
+        scene["width"], scene["height"], packed=False
+    )
+    opacities = scene["opacities"][None]
+    tile_size = 16
+    tile_width = math.ceil(scene["width"] / tile_size)
+    tile_height = math.ceil(scene["height"] / tile_size)
+    _, isect_ids, flatten_ids = isect_tiles(
+        means2d, radii, depths, tile_size, tile_width, tile_height
+    )
+    isect_offsets = isect_offset_encode(isect_ids, 1, tile_width, tile_height)
+    transmittances = torch.ones(
+        (1, scene["height"], scene["width"]), device=runtime["device"]
+    )
+    gaussian_ids, pixel_ids, image_ids = rasterize_to_indices_in_range(
+        0, 1_000_000_000, transmittances, means2d, conics, opacities,
+        scene["width"], scene["height"], tile_size, isect_offsets, flatten_ids
+    )
+    first_gaussian_ids, first_pixel_ids, first_image_ids = rasterize_to_indices_in_range(
+        0, 1, transmittances, means2d, conics, opacities,
+        scene["width"], scene["height"], tile_size, isect_offsets, flatten_ids
+    )
+    return locals_payload(
+        locals(), "means2d", "conics", "opacities", "transmittances", "isect_offsets",
+        "flatten_ids", "gaussian_ids", "pixel_ids", "image_ids", "first_gaussian_ids",
+        "first_pixel_ids", "first_image_ids"
+    ) | {
+        "width": torch.tensor(scene["width"], device=runtime["device"]),
+        "height": torch.tensor(scene["height"], device=runtime["device"]),
+        "tile_size": torch.tensor(tile_size, device=runtime["device"]),
     }
 
 

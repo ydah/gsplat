@@ -139,5 +139,10 @@ module Gsplat
       :native,
       NativeRasterOps.method(:backward)
     )
+    Backend.register(
+      :rasterize_to_indices_in_range,
+      :native,
+      Backend::RubyRasterizeToIndicesInRange.method(:forward)
+    )
   end
 end

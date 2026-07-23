@@ -20,6 +20,7 @@ The implementation follows the project design in
 - Pinhole, orthographic and equidistant fisheye cameras with OpenCV distortion
 - 2D Gaussian surfel rendering with normal, distortion and median-depth outputs
 - World-space Gaussian evaluation with differentiable accumulated normals
+- Contribution-index enumeration for iterative analysis and custom compositing
 - Direct covariance or quaternion/scale geometry
 - RGB, z/Euclidean depth, per-ray hit distance, expected-depth and combined render modes
 - Classic and antialiased rasterization with `radius_clip`

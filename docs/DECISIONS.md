@@ -66,3 +66,12 @@ Record only decisions that differ from, clarify, or resolve ambiguity in the des
   evaluator and its numerical geometry VJP; the performance-oriented 2D raster kernels are unchanged.
 - The analytic single-ray case covers values and quaternion gradients locally. Full CUDA parity for
   color, alpha, and normals remains a generated golden-data gate.
+
+### 2026-07-24: Contribution indices share compositor semantics (P11-10)
+
+- Range bounds address batches of `tile_size²` entries within each tile's sorted intersection list,
+  matching the upstream iterative rasterizer rather than indexing global intersections.
+- Enumeration preserves image-major, pixel-major, then depth order. It applies the same alpha skip,
+  clamp, and exclusive transmittance stop as the regular compositor.
+- Both backend selections use the portable Ruby enumerator. Integer outputs are analysis data and do
+  not record an autograd graph.

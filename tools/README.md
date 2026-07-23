@@ -27,6 +27,8 @@ recorded as skipped in `test/golden/manifest.json`.
 The Euclidean-order and single-ray hit-distance fixtures are analytic CPU cases. Their equations
 mirror current upstream eval3d semantics while keeping the primary package pin at 1.5.3. The full
 world-space color/alpha/normal fixture requires CUDA.
+Contribution-index enumeration also requires CUDA because its reference implementation is a fused
+raster kernel.
 
 ## Complete CUDA generation
 

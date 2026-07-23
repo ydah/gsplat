@@ -11,7 +11,7 @@ class DefaultStrategyTest < Minitest::Test
     projected.send(:accumulate_grad, Numo::DFloat[[[0.01, 0.02], [0.03, 0.04]]])
     info = {
       means2d: projected,
-      radii: Numo::Int32[[2, 0]],
+      radii: Numo::Int32[[[2, 3], [0, 0]]],
       width: 100,
       height: 50
     }

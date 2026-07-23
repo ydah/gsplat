@@ -48,7 +48,7 @@ class ProjectionOrthoTest < Minitest::Test
       **projection_options
     )
 
-    assert_equal 34, radii[0, 0]
+    assert_equal [34, 34], radii[0, 0, true].to_a
     assert_allclose means2d, Numo::DFloat[[[60, 20]]], atol: 1e-12, rtol: 0.0
     assert_allclose depths, Numo::DFloat[[2]], atol: 1e-12, rtol: 0.0
     assert_allclose conics, Numo::DFloat[[[1.0 / 100.3, 0, 1.0 / 100.3]]], atol: 1e-12, rtol: 0.0
@@ -92,9 +92,7 @@ class ProjectionOrthoTest < Minitest::Test
       calc_compensations: true,
       camera_model: "ortho"
     )
-    expected_visible = fixture.fetch("radii").max(axis: 2).gt(0)
-
-    assert_equal expected_visible.to_a, radii.gt(0).to_a
+    assert_equal fixture.fetch("radii").to_a, radii.to_a
     assert_allclose means2d, fixture.fetch("means2d"), atol: 1e-4, rtol: 1e-5
     assert_allclose depths, fixture.fetch("depths"), atol: 1e-5, rtol: 1e-5
     assert_allclose conics, fixture.fetch("conics"), atol: 1e-4, rtol: 1e-4

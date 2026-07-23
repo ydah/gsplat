@@ -121,16 +121,15 @@ gs_project_one(gs_projection_args *args, size_t camera, size_t gaussian)
     covar2d[3] += args->eps2d;
     float determinant = covar2d[0] * covar2d[3] - covar2d[1] * covar2d[2];
     float safe_det = determinant <= 0.0f ? 1e-10f : determinant;
-    float trace = covar2d[0] + covar2d[3];
-    float discriminant = fmaxf(trace * trace - 4.0f * determinant, 0.0f);
-    float eigenvalue = fmaxf(0.5f * (trace + sqrtf(discriminant)), 0.0f);
-    int32_t radius = (int32_t)ceilf(3.33f * sqrtf(eigenvalue));
+    int32_t radius_x = (int32_t)ceilf(3.33f * sqrtf(fmaxf(covar2d[0], 0.0f)));
+    int32_t radius_y = (int32_t)ceilf(3.33f * sqrtf(fmaxf(covar2d[3], 0.0f)));
     int visible = determinant > 0.0f && depth > args->near_plane && depth < args->far_plane &&
-                  radius > args->radius_clip &&
-                  projected[0] + radius > 0.0f && projected[0] - radius < args->width &&
-                  projected[1] + radius > 0.0f && projected[1] - radius < args->height;
+                  (radius_x > args->radius_clip || radius_y > args->radius_clip) &&
+                  projected[0] + radius_x > 0.0f && projected[0] - radius_x < args->width &&
+                  projected[1] + radius_y > 0.0f && projected[1] - radius_y < args->height;
     size_t index = camera * args->gaussians + gaussian;
-    args->radii[index] = visible ? radius : 0;
+    args->radii[index * 2] = visible ? radius_x : 0;
+    args->radii[index * 2 + 1] = visible ? radius_y : 0;
     args->means2d[index * 2] = projected[0];
     args->means2d[index * 2 + 1] = projected[1];
     args->depths[index] = depth;
@@ -174,7 +173,7 @@ gs_projection_forward(int argc, VALUE *argv, VALUE self)
     size_t shape_cn[2] = {cameras, gaussians};
     size_t shape_cn2[3] = {cameras, gaussians, 2};
     size_t shape_cn3[3] = {cameras, gaussians, 3};
-    VALUE radii = nary_new(numo_cInt32, 2, shape_cn);
+    VALUE radii = nary_new(numo_cInt32, 3, shape_cn2);
     VALUE means2d = nary_new(numo_cSFloat, 3, shape_cn2);
     VALUE depths = nary_new(numo_cSFloat, 2, shape_cn);
     VALUE conics = nary_new(numo_cSFloat, 3, shape_cn3);

@@ -95,6 +95,7 @@ module Gsplat
         normalized[true, true, 1] *= height / 2.0
         norm = (normalized**2).sum(axis: 2)**0.5
         radii = Gsplat::Ops::TensorOps.data(info.fetch(:radii))
+        radii = radii.max(axis: radii.ndim - 1) if radii.ndim == 3 && radii.shape[-1] == 2
         visible = radii.gt(0)
         norm[visible.eq(0)] = 0
         state[:grad2d] += norm.sum(axis: 0)

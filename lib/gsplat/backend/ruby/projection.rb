@@ -149,16 +149,24 @@ module Gsplat
         safe_determinant[invalid_determinant] = 1e-10 if invalid_determinant.any?
         conics = conics_from_covariance(regularized, safe_determinant)
         compensations = compensation(determinant_original, safe_determinant) if calc_compensations
-        largest_eigenvalue = Math::Mat.eigvals2x2(regularized)[true, true, 1]
-        largest_eigenvalue[largest_eigenvalue.lt(0)] = 0 if largest_eigenvalue.lt(0).any?
-        radii = Numo::Int32.cast((3.33 * (largest_eigenvalue**0.5)).ceil)
+        variance_x = regularized[true, true, 0, 0].dup
+        variance_y = regularized[true, true, 1, 1].dup
+        variance_x[variance_x.lt(0)] = 0 if variance_x.lt(0).any?
+        variance_y[variance_y.lt(0)] = 0 if variance_y.lt(0).any?
+        radius_x = Numo::Int32.cast((3.33 * (variance_x**0.5)).ceil)
+        radius_y = Numo::Int32.cast((3.33 * (variance_y**0.5)).ceil)
         depths = camera_means[true, true, 2].dup
-        visible = determinant.gt(0) & depths.gt(near_plane) & depths.lt(far_plane) & radii.gt(radius_clip)
-        visible &= (means2d[true, true, 0] + radii).gt(0)
-        visible &= means2d[true, true, 0] - radii < width
-        visible &= (means2d[true, true, 1] + radii).gt(0)
-        visible &= means2d[true, true, 1] - radii < height
-        radii[visible.eq(0)] = 0
+        visible = determinant.gt(0) & depths.gt(near_plane) & depths.lt(far_plane)
+        visible &= radius_x.gt(radius_clip) | radius_y.gt(radius_clip)
+        visible &= (means2d[true, true, 0] + radius_x).gt(0)
+        visible &= means2d[true, true, 0] - radius_x < width
+        visible &= (means2d[true, true, 1] + radius_y).gt(0)
+        visible &= means2d[true, true, 1] - radius_y < height
+        radius_x[visible.eq(0)] = 0
+        radius_y[visible.eq(0)] = 0
+        radii = Numo::Int32.zeros(*(depths.shape + [2]))
+        radii[true, true, 0] = radius_x
+        radii[true, true, 1] = radius_y
         [radii, means2d, depths, conics, compensations]
       end
       # rubocop:enable Metrics/AbcSize

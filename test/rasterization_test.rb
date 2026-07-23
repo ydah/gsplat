@@ -45,6 +45,7 @@ class RasterizationTest < Minitest::Test
     assert_equal 1, meta.fetch(:n_cameras)
     assert_equal 4, meta.fetch(:width)
     assert_equal 3, meta.fetch(:height)
+    assert_equal [1, 2, 2], meta.fetch(:radii).shape
   end
 
   def test_depth_render_modes_and_expected_depth_normalization

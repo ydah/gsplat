@@ -59,9 +59,9 @@ class ProjectionForwardTest < Minitest::Test
     )
 
     assert_equal Numo::Int32, radii.class
-    assert_equal [[1, 1], [1, 1, 2], [1, 1], [1, 1, 3], [1, 1]],
+    assert_equal [[1, 1, 2], [1, 1, 2], [1, 1], [1, 1, 3], [1, 1]],
                  [radii.shape, means2d.shape, depths.shape, conics.shape, compensations.shape]
-    assert_equal 17, radii[0, 0]
+    assert_equal [17, 17], radii[0, 0, true].to_a
     assert_allclose means2d, Numo::DFloat[[[50, 40]]], atol: 1e-12, rtol: 0.0
     assert_allclose depths, Numo::DFloat[[2]], atol: 1e-12, rtol: 0.0
     assert_allclose conics, Numo::DFloat[[[1.0 / 25.3, 0, 1.0 / 25.3]]], atol: 1e-12, rtol: 0.0
@@ -83,7 +83,7 @@ class ProjectionForwardTest < Minitest::Test
       height: 80
     )
 
-    assert_equal [17, 0, 0], radii.to_a.flatten
+    assert_equal [17, 17, 0, 0, 0, 0], radii.to_a.flatten
 
     clipped, = Gsplat.fully_fused_projection(
       means[0...1, true],
@@ -95,7 +95,21 @@ class ProjectionForwardTest < Minitest::Test
       height: 80,
       radius_clip: 17
     )
-    assert_equal 0, clipped[0, 0]
+    assert_equal [0, 0], clipped[0, 0, true].to_a
+  end
+
+  def test_projection_reports_axis_aligned_elliptical_radii
+    covariance = Numo::DFloat[[[0.01, 0, 0], [0, 0.04, 0], [0, 0, 0.01]]]
+    radii, = Gsplat.fully_fused_projection(
+      Numo::DFloat[[0, 0, 2]],
+      covars: covariance,
+      viewmats: identity_viewmats,
+      ks: intrinsics,
+      width: 100,
+      height: 80
+    )
+
+    assert_equal [17, 34], radii[0, 0, true].to_a
   end
 
   def test_matches_python_pinhole_golden_data
@@ -110,9 +124,7 @@ class ProjectionForwardTest < Minitest::Test
       height: fixture.fetch("height").to_i,
       calc_compensations: true
     )
-    expected_visible = fixture.fetch("radii").max(axis: 2).gt(0)
-
-    assert_equal expected_visible.to_a, radii.gt(0).to_a
+    assert_equal fixture.fetch("radii").to_a, radii.to_a
     assert_allclose means2d, fixture.fetch("means2d"), atol: 1e-4, rtol: 1e-5
     assert_allclose depths, fixture.fetch("depths"), atol: 1e-5, rtol: 1e-5
     assert_allclose conics, fixture.fetch("conics"), atol: 1e-4, rtol: 1e-4

@@ -13,7 +13,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P1-2 | Complete | 2026-07-23 | Batched quaternion VJPs and closed-form 2x2/3x3 matrix operations |
 | P1-3 | Complete (golden pending) | 2026-07-23 | Covariance/precision fwd+bwd, triu output, float64 gradcheck |
 | P2-1 | Complete (golden pending) | 2026-07-23 | SH degrees 0–4, masks, arbitrary channels, analytic direction/coefficient VJPs |
-| P3-1 | Complete (golden pending) | 2026-07-23 | Pinhole forward, world/camera primitives, scalar radii, culling and compensation |
+| P3-1 | Complete (golden pending) | 2026-07-23 | Pinhole forward, world/camera primitives, culling and compensation |
 | P3-2 | Complete (golden pending) | 2026-07-23 | Analytic projection VJPs for means, covariance, quaternion and scale |
 | P3-3 | Complete (golden pending) | 2026-07-23 | Orthographic forward/backward and camera-model dispatch |
 | P4-1 | Complete (golden pending) | 2026-07-23 | Tile AABBs, 64-bit intersection keys, sorting and prefix offsets |
@@ -38,6 +38,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P10-4 | Complete | 2026-07-23 | GVL-free OpenMP raster forward/backward with atomic scatter-add |
 | P11-1 | Complete (golden pending) | 2026-07-23 | N-D features, differentiable channel chunking and radius clipping |
 | P11-2 | Complete (golden pending) | 2026-07-23 | Full and packed direct covariance forward/backward across the renderer |
+| P11-3 | Complete (golden pending) | 2026-07-23 | Axis-aligned elliptical radii in Ruby/native projection and metadata |
 
 ## Phase gates
 
@@ -68,14 +69,14 @@ This file is the restart point for implementation sessions. Read it after `READM
 - L1/L2: hand-calculated pinhole/orthographic cases and float64 central differences pass.
 - Covariance-direct and quaternion/scale paths both propagate analytic gradients.
 - L3: pinhole and orthographic tests are present and skip until golden generation is run.
-- Scalar radii follow the v1 design; golden visibility compares against upstream elliptical radii.
+- Projection radii use the upstream `[C,N,2]` axis-aligned elliptical representation.
 - Full suite: 63 tests, 155 assertions, no failures, 5 documented golden-data skips.
 - RuboCop: no offenses.
 
 ### P4 — Complete (golden-data gate pending)
 
 - L1: exact handcrafted tile counts, 64-bit keys, flattened ids and empty-tile offsets pass.
-- Scalar v1 radii and upstream elliptical radii are both accepted.
+- Elliptical radii are primary; legacy scalar radii remain accepted by the low-level intersection API.
 - L3: `isect_c3_n1000.npz` coverage is present and skips until golden generation is run.
 - Full suite: 68 tests, 163 assertions, no failures, 6 documented golden-data skips.
 - RuboCop: no offenses.

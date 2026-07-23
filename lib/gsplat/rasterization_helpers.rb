@@ -23,9 +23,16 @@ module Gsplat
         sh_degree,
         directions,
         coefficients,
-        masks: Ops::TensorOps.data(radii).gt(0)
+        masks: visible_radii(radii)
       )
       Ops::TensorOps.apply(Ops::AddClampMin, evaluated, offset: 0.5, minimum: 0.0)
+    end
+
+    def visible_radii(radii)
+      values = Ops::TensorOps.data(radii)
+      return values.gt(0) unless values.ndim >= 3 && values.shape[-1] == 2
+
+      values.min(axis: values.ndim - 1).gt(0)
     end
 
     def render_features(colors, depths, render_mode)

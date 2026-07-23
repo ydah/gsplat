@@ -50,3 +50,33 @@ bundle exec ruby examples/fit_image.rb --gaussians 2000 --steps 300
 
 The example constructs a deterministic smooth target using the same Gaussian geometry, then
 optimizes its colors through the complete differentiable rendering pipeline and reports PSNR.
+
+## Training a COLMAP capture
+
+Prepare a standard COLMAP project with `sparse/0/{cameras,images,points3D}.bin` and an `images/`
+directory. For a downsample factor greater than one, place correspondingly resized images in
+`images_N/`; camera dimensions and intrinsics are scaled automatically.
+
+```bash
+gem install ruby-vips # or: gem install chunky_png
+bundle exec ruby examples/simple_trainer.rb \
+  --data /path/to/capture \
+  --output results/capture \
+  --steps 30000 \
+  --data-factor 1
+```
+
+Use `--strategy mcmc` for the MCMC relocation strategy. The trainer writes an NPZ checkpoint and
+an Inria-compatible `splats.ply` at the configured final step.
+
+Render an orbit from the exported PLY with:
+
+```bash
+bundle exec ruby examples/render_path.rb \
+  --ply results/capture/splats.ply \
+  --output results/capture/path \
+  --frames 120
+```
+
+The image layer selects `ruby-vips` first and falls back to `chunky_png`. The latter supports the
+portable PNG path; `ruby-vips` is recommended for dataset training.

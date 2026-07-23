@@ -37,7 +37,8 @@ module Gsplat
         super.merge(grad2d: nil, count: nil, radii: nil)
       end
 
-      def step_post_backward(params:, optimizers:, state:, step:, info:)
+      # rubocop:disable Metrics/ParameterLists
+      def step_post_backward(params:, optimizers:, state:, step:, info:, **_options)
         check_sanity(params, optimizers)
         collect_statistics!(params, state, info)
         refine!(params, optimizers, state, step) if should_refine?(step)
@@ -45,6 +46,7 @@ module Gsplat
         Ops.reset_opacity!(params, optimizers, maximum: 2 * prune_opa) if reset_due
         state
       end
+      # rubocop:enable Metrics/ParameterLists
 
       # rubocop:disable Metrics/AbcSize
       def refinement_masks(params, state)

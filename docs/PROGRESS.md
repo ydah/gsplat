@@ -31,6 +31,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P9-2 | Complete | 2026-07-23 | COLMAP bin/txt cameras, images and 100-point fixture with pose conversion |
 | P9-3 | Complete (golden pending) | 2026-07-23 | k-NN initialization, SH color helpers, scene scale and differentiable SSIM |
 | P9-4 | Complete | 2026-07-23 | NPZ training checkpoints and vips/chunky_png RGB image IO |
+| P9-5 | Complete | 2026-07-23 | Multi-view Trainer, staged SH, strategy hooks and training/render CLIs |
 
 ## Phase gates
 
@@ -106,4 +107,14 @@ This file is the restart point for implementation sessions. Read it after `READM
 - MCMC equation 9 is verified analytically; noise mean/variance and a reduced image fit pass.
 - L3 strategy and relocation fixtures remain pending CUDA golden generation.
 - Full suite: 109 tests, 323 assertions, no failures, 11 documented golden-data skips.
+- RuboCop: no offenses.
+
+### P9 — Complete (golden-data gate pending)
+
+- Inria PLY and COLMAP bin/txt parsing pass round-trip and paired-fixture tests.
+- k-NN initialization, scene scale, L1/SSIM/PSNR, checkpoint restart, and optional image backends pass.
+- The eight-view synthetic Trainer E2E exceeds 28 dB in 80 steps; the production default remains 30,000 steps.
+- `simple_trainer.rb` and `render_path.rb` provide the documented real-COLMAP workflow.
+- L3 SSIM remains pending golden generation; optional image tests skip under Bundler when neither backend is declared.
+- Full suite: 131 tests, 817 assertions, no failures, 14 documented skips.
 - RuboCop: no offenses.

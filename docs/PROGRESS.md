@@ -18,6 +18,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P3-3 | Complete (golden pending) | 2026-07-23 | Orthographic forward/backward and camera-model dispatch |
 | P4-1 | Complete (golden pending) | 2026-07-23 | Tile AABBs, 64-bit intersection keys, sorting and prefix offsets |
 | P5-1 | Complete | 2026-07-23 | Brute-force alpha compositor with arbitrary channels and backgrounds |
+| P5-2 | Complete (golden pending) | 2026-07-23 | Vectorized tile compositor, masks, partial edge tiles and retained last ids |
 
 ## Phase gates
 
@@ -58,4 +59,12 @@ This file is the restart point for implementation sessions. Read it after `READM
 - Scalar v1 radii and upstream elliptical radii are both accepted.
 - L3: `isect_c3_n1000.npz` coverage is present and skips until golden generation is run.
 - Full suite: 68 tests, 163 assertions, no failures, 6 documented golden-data skips.
+- RuboCop: no offenses.
+
+### P5 — Complete (golden-data gate pending)
+
+- L1/L4: single-pixel analytical cases and tile-vs-brute-force image comparisons pass.
+- Partial edge tiles, arbitrary channels, backgrounds and tile masks are covered.
+- L3: `raster_rgb.npz` forward coverage is present and skips until CUDA golden generation is run.
+- Full suite: 75 tests, 175 assertions, no failures, 7 documented golden-data skips.
 - RuboCop: no offenses.

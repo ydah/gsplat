@@ -16,6 +16,7 @@ require_relative "gsplat/ops/accumulate"
 require_relative "gsplat/ops/isect_tiles"
 require_relative "gsplat/ops/projection"
 require_relative "gsplat/ops/quat_scale_to_covar_preci"
+require_relative "gsplat/ops/rasterize_to_pixels"
 require_relative "gsplat/ops/spherical_harmonics"
 require_relative "gsplat/io/npy"
 

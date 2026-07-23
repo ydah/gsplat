@@ -12,6 +12,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P1-1 | Complete | 2026-07-23 | Autograd Variable/Function/Context, branching, multi-output, no_grad, graph release |
 | P1-2 | Complete | 2026-07-23 | Batched quaternion VJPs and closed-form 2x2/3x3 matrix operations |
 | P1-3 | Complete (golden pending) | 2026-07-23 | Covariance/precision fwd+bwd, triu output, float64 gradcheck |
+| P2-1 | Complete (golden pending) | 2026-07-23 | SH degrees 0–4, masks, arbitrary channels, analytic direction/coefficient VJPs |
 
 ## Phase gates
 
@@ -28,3 +29,11 @@ This file is the restart point for implementation sessions. Read it after `READM
 - L1/L2: analytic properties and float64 central differences pass.
 - L3: `quat_covar_full.npz` test is present and skipped until `tools/README.md` CUDA generation is run.
 - Full suite and lint evidence are recorded in the P1-3 commit.
+
+### P2 — Complete (golden-data gate pending)
+
+- L1/L2: known degree-zero/degree-one values and float64 direction/coefficient central differences pass.
+- Masks suppress forward values and their corresponding VJPs; channels are not restricted to RGB.
+- L3: `sh_deg3.npz` test is present and skipped until `tools/README.md` golden generation is run.
+- Full suite: 52 tests, 130 assertions, no failures, 2 documented golden-data skips.
+- RuboCop: no offenses.

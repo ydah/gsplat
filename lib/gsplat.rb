@@ -10,7 +10,9 @@ require_relative "gsplat/autograd/function"
 require_relative "gsplat/autograd/variable"
 require_relative "gsplat/math/mat"
 require_relative "gsplat/math/quaternion"
+require_relative "gsplat/math/spherical_harmonic_basis"
 require_relative "gsplat/ops/quat_scale_to_covar_preci"
+require_relative "gsplat/ops/spherical_harmonics"
 require_relative "gsplat/io/npy"
 
 # Differentiable 3D Gaussian splatting for Ruby.

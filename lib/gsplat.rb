@@ -5,6 +5,7 @@ require "numo/narray"
 
 require_relative "gsplat/version"
 require_relative "gsplat/backend"
+require_relative "gsplat/io/npy"
 
 # Differentiable 3D Gaussian splatting for Ruby.
 module Gsplat

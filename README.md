@@ -22,6 +22,7 @@ The implementation follows the project design in
 - RGB, z/Euclidean depth, per-ray hit distance, expected-depth and combined render modes
 - Classic and antialiased rasterization with `radius_clip`
 - Dependency-free PNG/K-means parameter compression
+- Adam and visibility-masked SelectiveAdam optimizers
 - Ruby reference and optional OpenMP native backends
 
 Image IO is optional. Install `ruby-vips` for best performance or `chunky_png` as a portable

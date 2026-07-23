@@ -42,6 +42,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P11-4 | Complete | 2026-07-23 | Morton grid sort, PNG quantization, SH K-means and compatible metadata layout |
 | P11-5 | Complete (golden pending) | 2026-07-23 | Fisheye and OpenCV radial/tangential/thin-prism projection with VJPs |
 | P11-6 | Complete (golden pending) | 2026-07-24 | Euclidean center sorting and per-pixel anisotropic ray-hit distance modes |
+| P11-7 | Complete | 2026-07-24 | First-axis visibility-masked Adam parameter and moment updates |
 
 ## Phase gates
 

@@ -22,14 +22,16 @@ module Gsplat
           options.fetch(:near_plane),
           options.fetch(:far_plane)
         )
-        means2d, covars2d = Math::CameraProjection.persp_proj(
+        camera_model = options.fetch(:camera_model)
+        means2d, covars2d = RubyProjection.project(
           projection_means,
           camera_covars,
           intrinsics,
           width,
-          height
+          height,
+          camera_model
         )
-        jacobians = projection_jacobians(projection_means, intrinsics, width, height)
+        jacobians = projection_jacobians(projection_means, intrinsics, width, height, camera_model)
         output_gradients = validate_output_gradients(
           means.class,
           means2d,
@@ -47,7 +49,8 @@ module Gsplat
           output_gradients,
           options.fetch(:eps2d),
           width,
-          height
+          height,
+          camera_model
         )
         grad_means, grad_expanded_covars = world_to_cam_vjp(
           grad_camera_means,
@@ -74,15 +77,18 @@ module Gsplat
       end
       private_class_method :safe_means
 
-      def projection_jacobians(means, intrinsics, width, height)
+      def projection_jacobians(means, intrinsics, width, height, camera_model)
         output = means.class.zeros(means.shape[0], means.shape[1], 2, 3)
         means.shape[0].times do |camera_index|
-          _, jacobians = Math::CameraProjection.pinhole_camera(
-            means[camera_index, true, true],
-            intrinsics[camera_index, true, true],
-            width,
-            height
-          )
+          camera_means = means[camera_index, true, true]
+          camera_intrinsics = intrinsics[camera_index, true, true]
+          _, jacobians = if camera_model.to_s == "ortho"
+                           Math::CameraProjection.ortho_camera(camera_means, camera_intrinsics)
+                         else
+                           Math::CameraProjection.pinhole_camera(
+                             camera_means, camera_intrinsics, width, height
+                           )
+                         end
           output[camera_index, true, true, true] = jacobians
         end
         output
@@ -113,7 +119,8 @@ module Gsplat
       private_class_method :cast_gradient
 
       # rubocop:disable Metrics/ParameterLists
-      def projection_vjp(means, covars, covars2d, jacobians, intrinsics, gradients, eps2d, width, height)
+      def projection_vjp(means, covars, covars2d, jacobians, intrinsics, gradients, eps2d, width, height,
+                         camera_model)
         # rubocop:enable Metrics/ParameterLists
         grad_means2d, grad_depths, grad_conics, grad_compensations = gradients
         grad_covars2d = covariance_output_vjp(
@@ -138,7 +145,8 @@ module Gsplat
           grad_depths,
           grad_jacobians.reshape(*jacobians.shape),
           width,
-          height
+          height,
+          camera_model
         )
         [grad_camera_means, grad_camera_covars]
       end

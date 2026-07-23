@@ -7,24 +7,26 @@ module Gsplat
       module_function
 
       # rubocop:disable Metrics/ParameterLists
-      def camera_mean_vjp(means, intrinsics, grad_means2d, grad_depths, grad_jacobians, width, height)
+      def camera_mean_vjp(means, intrinsics, grad_means2d, grad_depths, grad_jacobians, width, height,
+                          camera_model)
         # rubocop:enable Metrics/ParameterLists
         output = means.class.zeros(*means.shape)
         means.shape[0].times do |camera_index|
           camera_means = means[camera_index, true, true]
           camera_intrinsics = intrinsics[camera_index, true, true]
-          gradient = projected_mean_vjp(
-            camera_means,
-            camera_intrinsics,
-            grad_means2d[camera_index, true, true]
-          )
-          gradient += pinhole_jacobian_vjp(
-            camera_means,
-            camera_intrinsics,
-            grad_jacobians[camera_index, true, true, true],
-            width,
-            height
-          )
+          output_gradient = grad_means2d[camera_index, true, true]
+          gradient = if camera_model.to_s == "ortho"
+                       ortho_mean_vjp(camera_means, camera_intrinsics, output_gradient)
+                     else
+                       projected_mean_vjp(camera_means, camera_intrinsics, output_gradient) +
+                         pinhole_jacobian_vjp(
+                           camera_means,
+                           camera_intrinsics,
+                           grad_jacobians[camera_index, true, true, true],
+                           width,
+                           height
+                         )
+                     end
           gradient[true, 2] += grad_depths[camera_index, true]
           output[camera_index, true, true] = gradient
         end
@@ -58,6 +60,14 @@ module Gsplat
       end
       # rubocop:enable Metrics/AbcSize
       private_class_method :projected_mean_vjp
+
+      def ortho_mean_vjp(means, intrinsics, gradient)
+        output = means.class.zeros(*means.shape)
+        output[true, 0] = gradient[true, 0] * intrinsics[0, 0]
+        output[true, 1] = gradient[true, 1] * intrinsics[1, 1]
+        output
+      end
+      private_class_method :ortho_mean_vjp
 
       # rubocop:disable Metrics/AbcSize
       def pinhole_jacobian_vjp(means, intrinsics, gradient, width, height)

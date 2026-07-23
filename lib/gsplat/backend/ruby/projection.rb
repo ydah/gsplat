@@ -17,12 +17,8 @@ module Gsplat
         means, covars, viewmats, intrinsics = inputs
         camera_means, camera_covars = Math::CameraProjection.world_to_cam(means, covars, viewmats)
         projection_means = projection_safe_means(camera_means, near_plane, far_plane)
-        means2d, covars2d = Math::CameraProjection.persp_proj(
-          projection_means,
-          camera_covars,
-          intrinsics,
-          width,
-          height
+        means2d, covars2d = project(
+          projection_means, camera_covars, intrinsics, width, height, camera_model
         )
         finish_projection(
           camera_means,
@@ -113,9 +109,21 @@ module Gsplat
         end
         raise ArgumentError, "eps2d and radius_clip must be non-negative" if eps2d.negative? || radius_clip.negative?
         raise ArgumentError, "near_plane must be less than far_plane" unless near_plane < far_plane
-        raise ArgumentError, "camera_model must be \"pinhole\"" unless camera_model.to_s == "pinhole"
+        return if %w[pinhole ortho].include?(camera_model.to_s)
+
+        raise ArgumentError, "camera_model must be \"pinhole\" or \"ortho\""
       end
       private_class_method :validate_options!
+
+      # rubocop:disable Metrics/ParameterLists
+      def project(means, covars, intrinsics, width, height, camera_model)
+        # rubocop:enable Metrics/ParameterLists
+        if camera_model.to_s == "ortho"
+          return Math::CameraProjection.ortho_proj(means, covars, intrinsics, width, height)
+        end
+
+        Math::CameraProjection.persp_proj(means, covars, intrinsics, width, height)
+      end
 
       def projection_safe_means(camera_means, near_plane, far_plane)
         output = camera_means.dup

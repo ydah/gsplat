@@ -51,6 +51,27 @@ module Gsplat
         [means2d, covars2d]
       end
 
+      def ortho_proj(means, covars, intrinsics, width, height)
+        means, covars, intrinsics = validate_projection_inputs(means, covars, intrinsics, width, height)
+        camera_count = means.shape[0]
+        gaussian_count = means.shape[1]
+        means2d = means.class.zeros(camera_count, gaussian_count, 2)
+        covars2d = means.class.zeros(camera_count, gaussian_count, 2, 2)
+        camera_count.times do |camera_index|
+          projected_means, jacobians = ortho_camera(
+            means[camera_index, true, true],
+            intrinsics[camera_index, true, true]
+          )
+          means2d[camera_index, true, true] = projected_means
+          transformed = Mat.matmul_batch(jacobians, covars[camera_index, true, true, true])
+          covars2d[camera_index, true, true, true] = Mat.matmul_batch(
+            transformed,
+            jacobians.transpose(0, 2, 1)
+          )
+        end
+        [means2d, covars2d]
+      end
+
       def validate_world_inputs(means, covars, viewmats)
         validate_float_array!(means, "means")
         covars = means.class.cast(covars)
@@ -139,6 +160,16 @@ module Gsplat
         output
       end
       private_class_method :clip_ratio
+
+      def ortho_camera(means, intrinsics)
+        jacobians = means.class.zeros(means.shape[0], 2, 3)
+        jacobians[true, 0, 0] = intrinsics[0, 0]
+        jacobians[true, 1, 1] = intrinsics[1, 1]
+        means2d = means.class.zeros(means.shape[0], 2)
+        means2d[true, 0] = (means[true, 0] * intrinsics[0, 0]) + intrinsics[0, 2]
+        means2d[true, 1] = (means[true, 1] * intrinsics[1, 1]) + intrinsics[1, 2]
+        [means2d, jacobians]
+      end
     end
   end
 end

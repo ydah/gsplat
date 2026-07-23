@@ -70,6 +70,10 @@ module Gsplat
       Math::CameraProjection.persp_proj(means, covars, intrinsics, width, height)
     end
 
+    def ortho_proj(means, covars, intrinsics, width, height)
+      Math::CameraProjection.ortho_proj(means, covars, intrinsics, width, height)
+    end
+
     # rubocop:disable Metrics/ParameterLists, Naming/MethodParameterName
     def fully_fused_projection(means, viewmats:, ks:, width:, height:, covars: nil, quats: nil, scales: nil,
                                eps2d: 0.3, near_plane: 0.01, far_plane: 1e10, radius_clip: 0.0,

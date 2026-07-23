@@ -15,6 +15,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P2-1 | Complete (golden pending) | 2026-07-23 | SH degrees 0–4, masks, arbitrary channels, analytic direction/coefficient VJPs |
 | P3-1 | Complete (golden pending) | 2026-07-23 | Pinhole forward, world/camera primitives, scalar radii, culling and compensation |
 | P3-2 | Complete (golden pending) | 2026-07-23 | Analytic projection VJPs for means, covariance, quaternion and scale |
+| P3-3 | Complete (golden pending) | 2026-07-23 | Orthographic forward/backward and camera-model dispatch |
 
 ## Phase gates
 
@@ -38,4 +39,13 @@ This file is the restart point for implementation sessions. Read it after `READM
 - Masks suppress forward values and their corresponding VJPs; channels are not restricted to RGB.
 - L3: `sh_deg3.npz` test is present and skipped until `tools/README.md` golden generation is run.
 - Full suite: 52 tests, 130 assertions, no failures, 2 documented golden-data skips.
+- RuboCop: no offenses.
+
+### P3 — Complete (golden-data gate pending)
+
+- L1/L2: hand-calculated pinhole/orthographic cases and float64 central differences pass.
+- Covariance-direct and quaternion/scale paths both propagate analytic gradients.
+- L3: pinhole and orthographic tests are present and skip until golden generation is run.
+- Scalar radii follow the v1 design; golden visibility compares against upstream elliptical radii.
+- Full suite: 63 tests, 155 assertions, no failures, 5 documented golden-data skips.
 - RuboCop: no offenses.

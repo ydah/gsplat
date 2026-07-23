@@ -17,6 +17,7 @@ module Gsplat
         @creator = creator
         @grad = nil
         @absgrad = nil
+        @absgrad_targets = []
       end
 
       # Whether this variable accumulates gradients.
@@ -32,6 +33,7 @@ module Gsplat
       def zero_grad!
         @grad = nil
         @absgrad = nil
+        @absgrad_targets.each { |target, key| target[key] = nil }
       end
 
       # Accumulates an auxiliary absolute gradient produced by rasterization.
@@ -46,6 +48,16 @@ module Gsplat
         end
 
         @absgrad = @absgrad ? @absgrad + gradient : gradient.dup
+        @absgrad_targets.each { |target, key| target[key] = @absgrad }
+      end
+
+      # Binds auxiliary absolute-gradient updates to a metadata hash entry.
+      #
+      # @api private
+      # @return [void]
+      def bind_absgrad(target, key)
+        @absgrad_targets << [target, key]
+        target[key] = @absgrad
       end
 
       # Removes a creator after its graph node has completed backward.

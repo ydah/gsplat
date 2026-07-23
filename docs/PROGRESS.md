@@ -21,6 +21,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P5-2 | Complete (golden pending) | 2026-07-23 | Vectorized tile compositor, masks, partial edge tiles and retained last ids |
 | P6-1 | Complete (golden pending) | 2026-07-23 | Reverse tile scan VJPs and brute-force gradient cross-check |
 | P6-2 | Complete (golden pending) | 2026-07-23 | Optional per-pixel absolute mean-gradient accumulation |
+| P7-1 | Complete (golden pending) | 2026-07-23 | High-level render modes, SH, antialiasing, depth normalization and metadata |
 
 ## Phase gates
 

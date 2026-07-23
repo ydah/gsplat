@@ -18,6 +18,11 @@ require_relative "gsplat/ops/projection"
 require_relative "gsplat/ops/quat_scale_to_covar_preci"
 require_relative "gsplat/ops/rasterize_to_pixels"
 require_relative "gsplat/ops/spherical_harmonics"
+require_relative "gsplat/ops/tensor_shape_ops"
+require_relative "gsplat/ops/tensor_value_ops"
+require_relative "gsplat/rasterization_validation"
+require_relative "gsplat/rasterization_helpers"
+require_relative "gsplat/rasterization"
 require_relative "gsplat/io/npy"
 
 # Differentiable 3D Gaussian splatting for Ruby.

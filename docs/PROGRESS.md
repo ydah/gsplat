@@ -39,6 +39,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P11-1 | Complete (golden pending) | 2026-07-23 | N-D features, differentiable channel chunking and radius clipping |
 | P11-2 | Complete (golden pending) | 2026-07-23 | Full and packed direct covariance forward/backward across the renderer |
 | P11-3 | Complete (golden pending) | 2026-07-23 | Axis-aligned elliptical radii in Ruby/native projection and metadata |
+| P11-4 | Complete | 2026-07-23 | Morton grid sort, PNG quantization, SH K-means and compatible metadata layout |
 
 ## Phase gates
 

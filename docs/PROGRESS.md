@@ -24,6 +24,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P7-1 | Complete (golden pending) | 2026-07-23 | High-level render modes, SH, antialiasing, depth normalization and metadata |
 | P7-2 | Complete | 2026-07-23 | Self-consistency image fitter, 128px fixture and monotonic PSNR E2E |
 | P8-1 | Complete | 2026-07-23 | Adam groups, bias correction, editable state and exponential scheduling |
+| P8-2 | Complete | 2026-07-23 | Strategy lifecycle and synchronized duplicate/split/remove/reset operations |
 
 ## Phase gates
 

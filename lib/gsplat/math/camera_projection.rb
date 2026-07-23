@@ -129,7 +129,6 @@ module Gsplat
         [means2d, jacobians]
       end
       # rubocop:enable Metrics/AbcSize
-      private_class_method :pinhole_camera
 
       def clip_ratio(values, minimum, maximum)
         output = values.dup

@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require_relative "../backend/ruby/projection"
+require_relative "../backend/ruby/projection_backward"
+require_relative "../backend/ruby/projection_covariance_vjp"
+require_relative "../backend/ruby/projection_input_vjp"
 
 # Differentiable camera projection operations.
 module Gsplat
@@ -32,8 +35,27 @@ module Gsplat
           options.fetch(:calc_compensations) ? outputs : outputs.first(4)
         end
 
-        def backward(_context, *_grad_outputs)
-          raise Gsplat::Error, "fully_fused_projection backward is not implemented yet"
+        # rubocop:disable Metrics/ParameterLists
+        def backward(context, _grad_radii, grad_means2d, grad_depths, grad_conics, grad_compensations = nil)
+          # rubocop:enable Metrics/ParameterLists
+          means, covars, quaternions, scales, viewmats, intrinsics, width, height, options = context.saved_values
+          input_gradients = Backend.dispatch(
+            :fully_fused_projection_backward,
+            means,
+            covars,
+            quaternions,
+            scales,
+            viewmats,
+            intrinsics,
+            width,
+            height,
+            grad_means2d,
+            grad_depths,
+            grad_conics,
+            grad_compensations,
+            **options
+          )
+          [*input_gradients, nil, nil, nil, nil]
         end
       end
     end
@@ -85,5 +107,10 @@ module Gsplat
     :fully_fused_projection_forward,
     :ruby,
     Backend::RubyProjection.method(:forward)
+  )
+  Backend.register(
+    :fully_fused_projection_backward,
+    :ruby,
+    Backend::RubyProjectionBackward.method(:backward)
   )
 end

@@ -10,7 +10,7 @@ module Gsplat
       def forward(means, covars, quaternions, scales, viewmats, intrinsics, width, height,
                   eps2d:, near_plane:, far_plane:, radius_clip:, calc_compensations:, camera_model:)
         # rubocop:enable Metrics/ParameterLists
-        inputs = validate_inputs(
+        inputs = prepare_inputs(
           means, covars, quaternions, scales, viewmats, intrinsics, width, height,
           eps2d, near_plane, far_plane, radius_clip, camera_model
         )
@@ -39,8 +39,8 @@ module Gsplat
       end
 
       # rubocop:disable Metrics/ParameterLists
-      def validate_inputs(means, covars, quaternions, scales, viewmats, intrinsics, width, height,
-                          eps2d, near_plane, far_plane, radius_clip, camera_model)
+      def prepare_inputs(means, covars, quaternions, scales, viewmats, intrinsics, width, height,
+                         eps2d, near_plane, far_plane, radius_clip, camera_model)
         # rubocop:enable Metrics/ParameterLists
         unless means.is_a?(Numo::NArray) && [Numo::SFloat, Numo::DFloat].include?(means.class)
           raise ArgumentError, "means must be Numo::SFloat or Numo::DFloat"
@@ -70,7 +70,6 @@ module Gsplat
         )
         [means, covars, viewmats, intrinsics]
       end
-      private_class_method :validate_inputs
 
       def prepare_covariances(means, covars, quaternions, scales)
         if covars

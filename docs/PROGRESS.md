@@ -14,6 +14,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P1-3 | Complete (golden pending) | 2026-07-23 | Covariance/precision fwd+bwd, triu output, float64 gradcheck |
 | P2-1 | Complete (golden pending) | 2026-07-23 | SH degrees 0–4, masks, arbitrary channels, analytic direction/coefficient VJPs |
 | P3-1 | Complete (golden pending) | 2026-07-23 | Pinhole forward, world/camera primitives, scalar radii, culling and compensation |
+| P3-2 | Complete (golden pending) | 2026-07-23 | Analytic projection VJPs for means, covariance, quaternion and scale |
 
 ## Phase gates
 

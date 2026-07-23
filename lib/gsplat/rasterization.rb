@@ -65,7 +65,7 @@ module Gsplat
       isect_offsets = Gsplat.isect_offset_encode(
         isect_ids, camera_count, tile_width, tile_height
       )
-      render_colors, render_alphas = Gsplat.rasterize_to_pixels(
+      render_colors, render_alphas = RasterizationHelpers.rasterize_features(
         means2d,
         conics,
         raster_features,
@@ -76,6 +76,7 @@ module Gsplat
         isect_offsets,
         flatten_ids,
         backgrounds: backgrounds,
+        channel_chunk: channel_chunk,
         absgrad: absgrad
       )
       if %w[ED RGB+ED].include?(render_mode)

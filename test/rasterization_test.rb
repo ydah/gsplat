@@ -103,7 +103,65 @@ class RasterizationTest < Minitest::Test
     assert_includes error.message, "[3, 3]"
   end
 
+  def test_nd_features_match_across_chunk_sizes_and_backends
+    [8, 40].each do |channels|
+      colors = Numo::SFloat.cast(
+        Array.new(2) { |gaussian| Array.new(channels) { |channel| (gaussian + channel + 1) / 50.0 } }
+      )
+      backgrounds = Numo::SFloat.cast([Array.new(channels) { |channel| channel / 100.0 }])
+      expected = with_backend(:ruby) do
+        render_typed(colors, backgrounds, channel_chunk: channels + 1)
+      end
+      chunked = with_backend(:ruby) do
+        render_typed(colors, backgrounds, channel_chunk: 7)
+      end
+      native = with_backend(:native) do
+        render_typed(colors, backgrounds, channel_chunk: 7)
+      end
+
+      assert_equal [1, 3, 4, channels], chunked[0].shape
+      assert_allclose chunked[0], expected[0], atol: 2e-6, rtol: 2e-5
+      assert_allclose chunked[1], expected[1], atol: 2e-6, rtol: 2e-5
+      assert_allclose native[0], expected[0], atol: 3e-5, rtol: 3e-5
+      assert_allclose native[1], expected[1], atol: 3e-5, rtol: 3e-5
+    end
+  end
+
+  def test_chunked_feature_backward_and_radius_clip
+    colors = Gsplat::Autograd::Variable.new(Numo::DFloat.new(2, 40).rand, requires_grad: true)
+    rendered, alphas, = render(colors: colors, channel_chunk: 8)
+
+    RenderLoss.apply(rendered, alphas).backward
+
+    assert_equal [2, 40], colors.grad.shape
+    assert colors.grad.abs.gt(0).any?
+    clipped, clipped_alpha, = render(
+      colors: Numo::DFloat.ones(2, 8),
+      backgrounds: Numo::DFloat.ones(1, 8) * 0.25,
+      radius_clip: 100
+    )
+    assert_allclose clipped, Numo::DFloat.ones(1, 3, 4, 8) * 0.25, atol: 0.0, rtol: 0.0
+    assert_allclose clipped_alpha, Numo::DFloat.zeros(1, 3, 4, 1), atol: 0.0, rtol: 0.0
+  end
+
   private
+
+  def render_typed(colors, backgrounds, channel_chunk:)
+    Gsplat.rasterization(
+      means: Numo::SFloat.cast(@means),
+      quats: Numo::SFloat.cast(@quaternions),
+      scales: Numo::SFloat.cast(@scales),
+      opacities: Numo::SFloat.cast(@opacities),
+      colors: colors,
+      viewmats: Numo::SFloat.cast(@viewmats),
+      ks: Numo::SFloat.cast(@intrinsics),
+      backgrounds: backgrounds,
+      width: 4,
+      height: 3,
+      tile_size: 4,
+      channel_chunk: channel_chunk
+    )
+  end
 
   def render(**overrides)
     Gsplat.rasterization(

@@ -110,5 +110,64 @@ module Gsplat
         end
       end
     end
+
+    # Extracts a contiguous interval from the last tensor axis.
+    class FeatureSlice < Autograd::Function
+      class << self
+        def forward(context, value, range)
+          unless range.is_a?(Range) && range.begin.is_a?(Integer) && range.end.is_a?(Integer)
+            raise ArgumentError, "feature range must have integer bounds"
+          end
+
+          stop = range.exclude_end? ? range.end : range.end + 1
+          unless range.begin.between?(0, value.shape[-1]) && stop.between?(range.begin, value.shape[-1])
+            raise ShapeError, "feature range #{range.inspect} is outside #{value.shape.inspect}"
+          end
+
+          context.save(value.shape, range.begin, stop)
+          value[*Array.new(value.ndim - 1, true), range.begin...stop].dup
+        end
+
+        def backward(context, gradient)
+          shape, start, stop = context.saved_values
+          output = gradient.class.zeros(*shape)
+          output[*Array.new(output.ndim - 1, true), start...stop] = gradient
+          [output, nil]
+        end
+      end
+    end
+
+    # Concatenates any number of tensors along their final feature axis.
+    class ConcatFeatures < Autograd::Function
+      class << self
+        def forward(context, *values)
+          raise ArgumentError, "at least one feature tensor is required" if values.empty?
+
+          leading_shape = values.first.shape[0...-1]
+          unless values.all? { |value| value.shape[0...-1] == leading_shape }
+            raise ShapeError, "feature tensors must share leading dimensions"
+          end
+
+          sizes = values.map { |value| value.shape[-1] }
+          output = values.first.class.zeros(*(leading_shape + [sizes.sum]))
+          cursor = 0
+          values.each_with_index do |value, index|
+            output[*Array.new(output.ndim - 1, true), cursor...(cursor + sizes[index])] = value
+            cursor += sizes[index]
+          end
+          context.save(sizes)
+          output
+        end
+
+        def backward(context, gradient)
+          cursor = 0
+          context.saved_values.first.map do |size|
+            value = gradient[*Array.new(gradient.ndim - 1, true), cursor...(cursor + size)].dup
+            cursor += size
+            value
+          end
+        end
+      end
+    end
   end
 end

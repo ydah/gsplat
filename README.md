@@ -13,6 +13,16 @@ The implementation follows the project design in
 - CRuby 3.2 or newer
 - `numo-narray`
 
+## Supported rendering features
+
+- Differentiable dense 3D Gaussian projection and tiled alpha compositing
+- Arbitrary feature dimensions with configurable `channel_chunk`
+- Pinhole and orthographic cameras
+- Direct covariance or quaternion/scale geometry
+- RGB, depth, expected-depth and combined render modes
+- Classic and antialiased rasterization with `radius_clip`
+- Ruby reference and optional OpenMP native backends
+
 Image IO is optional. Install `ruby-vips` for best performance or `chunky_png` as a portable
 fallback once the IO layer is enabled.
 

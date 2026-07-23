@@ -36,6 +36,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P10-2 | Complete (hybrid) | 2026-07-23 | C float32 projection/SH forward; analytic backward and float64 fallback |
 | P10-3 | Complete | 2026-07-23 | C tile enumeration, stable 64-bit radix sort and offset encoding |
 | P10-4 | Complete | 2026-07-23 | GVL-free OpenMP raster forward/backward with atomic scatter-add |
+| P11-1 | Complete (golden pending) | 2026-07-23 | N-D features, differentiable channel chunking and radius clipping |
 
 ## Phase gates
 

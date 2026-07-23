@@ -24,6 +24,8 @@ require_relative "gsplat/rasterization_validation"
 require_relative "gsplat/rasterization_helpers"
 require_relative "gsplat/rasterization"
 require_relative "gsplat/training/image_fitter"
+require_relative "gsplat/optim/adam"
+require_relative "gsplat/optim/lr_scheduler"
 require_relative "gsplat/io/npy"
 
 # Differentiable 3D Gaussian splatting for Ruby.

@@ -60,6 +60,18 @@ module Gsplat
         target[key] = @absgrad
       end
 
+      # Replaces parameter storage after a first-axis structural edit.
+      #
+      # @api private
+      # @param value [Numo::NArray]
+      # @return [void]
+      def replace_data!(value)
+        raise ArgumentError, "replacement data must be a Numo::NArray" unless value.is_a?(Numo::NArray)
+
+        @data = value
+        zero_grad!
+      end
+
       # Removes a creator after its graph node has completed backward.
       #
       # @api private

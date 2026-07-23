@@ -29,6 +29,7 @@ module Gsplat
         far_plane: 1e10,
         tile_size: 16,
         rasterize_mode: "classic",
+        model_type: :three_d,
         output_dir: "results",
         seed: 42
       }.freeze
@@ -61,6 +62,9 @@ module Gsplat
         raise ArgumentError, "#{invalid} must be a positive integer" if invalid
         raise ArgumentError, "sh_degree must be in 0..4" unless sh_degree.is_a?(Integer) && sh_degree.between?(0, 4)
         raise ArgumentError, "ssim_lambda must be between 0 and 1" unless ssim_lambda.between?(0.0, 1.0)
+        unless %i[three_d two_d 3dgs 2dgs].include?(model_type.to_sym)
+          raise ArgumentError, "model_type must be :three_d/:3dgs or :two_d/:2dgs"
+        end
 
         learning_rates = %i[means_lr means_lr_final scales_lr quats_lr opacities_lr sh0_lr shN_lr]
         invalid_rate = learning_rates.find { |name| !public_send(name).positive? }

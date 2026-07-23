@@ -46,3 +46,13 @@ Record only decisions that differ from, clarify, or resolve ambiguity in the des
   implementation; the core 2D raster path retains its analytic/native backward.
 - `global_z_order: false` changes projection depths to camera-space Euclidean center distance. Near
   and far culling continue to use camera z, and the Euclidean norm VJP is propagated to means.
+
+### 2026-07-24: 2DGS reuses the differentiable EWA core (P11-8)
+
+- The Ruby 2DGS API preserves the upstream seven-value return structure and metadata names. Its
+  portable implementation uses the established EWA footprint/compositor, then derives oriented
+  camera normals, normalized surface normals, a depth-opacity distortion signal, and expected
+  depth as the median approximation.
+- This keeps color/alpha and Trainer optimization differentiable on both backends. Exact upstream
+  ray-splat transforms, median crossing, and distortion accumulation remain covered by the pending
+  CUDA golden gate rather than being represented as numerically identical on this CPU-only host.

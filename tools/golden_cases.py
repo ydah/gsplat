@@ -44,6 +44,7 @@ def all_cases() -> list[Case]:
             Case("render_fisheye_distorted", "fisheye_distorted", {}, requires_cuda=True),
             Case("distance_order", "distance_order", {}),
             Case("hit_distance_modes", "hit_distance", {}),
+            Case("raster_2dgs", "raster_2dgs", {}, requires_cuda=True),
             Case("strategy_default_masks", "strategy", {}),
             Case("relocation_mcmc", "relocation", {}, requires_cuda=True),
             Case("ssim_rgb", "ssim", {}),
@@ -110,6 +111,7 @@ def generate(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
         "fisheye_distorted": _fisheye_distorted_case,
         "distance_order": _distance_order_case,
         "hit_distance": _hit_distance_case,
+        "raster_2dgs": _raster_2dgs_case,
         "render": _render_case,
         "strategy": _strategy_case,
         "relocation": _relocation_case,
@@ -362,6 +364,23 @@ def _hit_distance_case(_case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
         locals(), "means", "quats", "scales", "opacities", "colors", "render_alphas",
         "render_d", "render_ed", "render_rgb_d", "render_rgb_ed"
     )
+
+
+def _raster_2dgs_case(_case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
+    torch, device = runtime["torch"], runtime["device"]
+    from gsplat import rasterization_2dgs
+
+    scene = _scene(runtime, 64)
+    colors = torch.rand(64, 3, device=device)
+    outputs = rasterization_2dgs(
+        scene["means"], scene["quats"], scene["scales"], scene["opacities"], colors,
+        scene["viewmats"], scene["ks"], scene["width"], scene["height"], packed=False
+    )
+    names = (
+        "render_colors", "render_alphas", "render_normals", "render_surface_normals",
+        "render_distort", "render_median"
+    )
+    return tensor_payload({**scene, "colors": colors, **dict(zip(names, outputs[:6]))})
 
 
 def _render_case(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:

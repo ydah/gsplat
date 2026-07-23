@@ -133,7 +133,9 @@ module Gsplat
       def render(indices, degree)
         activated = activated_params
         backgrounds = random_background(indices.length, scene.images.class)
-        Gsplat.rasterization(
+        renderer = %i[two_d 2dgs].include?(config.model_type.to_sym) ? :rasterization_2dgs : :rasterization
+        outputs = Gsplat.public_send(
+          renderer,
           means: params.fetch(:means),
           quats: activated.fetch(:quats),
           scales: activated.fetch(:scales),
@@ -151,6 +153,9 @@ module Gsplat
           rasterize_mode: config.rasterize_mode,
           absgrad: strategy.respond_to?(:absgrad) && strategy.absgrad
         )
+        return outputs if renderer == :rasterization
+
+        [outputs[0], outputs[1], outputs[6]]
       end
       # rubocop:enable Metrics/AbcSize
 

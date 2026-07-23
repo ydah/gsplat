@@ -50,6 +50,28 @@ class TrainerTest < Minitest::Test
     assert_includes error.message, "unknown"
   end
 
+  def test_two_d_mode_completes_a_training_step
+    scene, params = synthetic_scene
+    config = Gsplat::Training::Config.new(
+      max_steps: 1,
+      batch_size: 1,
+      sh_degree: 0,
+      model_type: :two_d,
+      eval_steps: [],
+      save_steps: [],
+      log_every: 10
+    )
+    strategy = Gsplat::Strategy::Default.new(refine_start_iter: 1_000)
+    trainer = Gsplat::Training::Trainer.new(
+      scene: scene, config: config, params: params, strategy: strategy
+    )
+
+    result = trainer.train
+
+    assert_equal 1, result.step
+    assert result.final_metrics[:psnr].finite?
+  end
+
   private
 
   def synthetic_scene

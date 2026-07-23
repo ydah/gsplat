@@ -18,6 +18,7 @@ The implementation follows the project design in
 - Differentiable dense 3D Gaussian projection and tiled alpha compositing
 - Arbitrary feature dimensions with configurable `channel_chunk`
 - Pinhole, orthographic and equidistant fisheye cameras with OpenCV distortion
+- 2D Gaussian surfel rendering with normal, distortion and median-depth outputs
 - Direct covariance or quaternion/scale geometry
 - RGB, z/Euclidean depth, per-ray hit distance, expected-depth and combined render modes
 - Classic and antialiased rasterization with `radius_clip`

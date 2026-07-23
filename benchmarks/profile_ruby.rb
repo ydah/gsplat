@@ -3,7 +3,7 @@
 
 require "gsplat"
 
-Gsplat.backend = :ruby
+Gsplat.backend = ENV.fetch("GSPLAT_BACKEND", "ruby").to_sym
 count = Integer(ENV.fetch("N", "1000"), 10)
 iterations = Integer(ENV.fetch("ITERATIONS", "5"), 10)
 width = Integer(ENV.fetch("WIDTH", "64"), 10)
@@ -64,7 +64,8 @@ operations = {
   intersections: intersection,
   rasterization: raster
 }
-puts "ruby=#{RUBY_VERSION} platform=#{RUBY_PLATFORM} N=#{count} image=#{width}x#{height} iterations=#{iterations}"
+puts "ruby=#{RUBY_VERSION} platform=#{RUBY_PLATFORM} backend=#{Gsplat.backend} " \
+     "N=#{count} image=#{width}x#{height} iterations=#{iterations}"
 operations.each do |name, operation|
   operation.call
   started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)

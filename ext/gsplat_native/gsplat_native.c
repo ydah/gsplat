@@ -7,6 +7,9 @@ typedef struct {
     size_t count;
 } gs_add_args;
 
+void gs_init_spherical_harmonics(VALUE native);
+void gs_init_projection(VALUE native);
+
 static void *
 gs_add_without_gvl(void *opaque)
 {
@@ -48,4 +51,6 @@ Init_gsplat_native(void)
     VALUE gsplat = rb_const_get(rb_cObject, rb_intern("Gsplat"));
     VALUE native = rb_define_module_under(gsplat, "Native");
     rb_define_singleton_method(native, "add", gs_native_add, 2);
+    gs_init_spherical_harmonics(native);
+    gs_init_projection(native);
 }

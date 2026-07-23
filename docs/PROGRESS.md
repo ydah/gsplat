@@ -33,6 +33,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P9-4 | Complete | 2026-07-23 | NPZ training checkpoints and vips/chunky_png RGB image IO |
 | P9-5 | Complete | 2026-07-23 | Multi-view Trainer, staged SH, strategy hooks and training/render CLIs |
 | P10-1 | Complete | 2026-07-23 | Optional C extension, Numo bridge, GVL release and build fallback |
+| P10-2 | Complete (hybrid) | 2026-07-23 | C float32 projection/SH forward; analytic backward and float64 fallback |
 
 ## Phase gates
 

@@ -15,3 +15,11 @@ Record only decisions that differ from, clarify, or resolve ambiguity in the des
 - This development host has no PyTorch/gsplat installation or CUDA device. Per P0-4's alternate DoD,
   the dependency-free dry run is the local acceptance gate. `tools/README.md` documents CPU partial
   generation and the required CUDA command for committing the complete golden set.
+
+### 2026-07-23: Native paths retain exact Ruby fallbacks (P10)
+
+- Native kernels target contiguous `Numo::SFloat`, the production training dtype.
+- Float64 gradchecks, masked SH, and analytic projection/SH backward continue through the Ruby
+  implementation. The `:native` backend remains functionally complete while avoiding a second,
+  divergent copy of derivative formulas.
+- Performance reports label these paths as hybrid and measure each accelerated operation explicitly.

@@ -18,5 +18,6 @@ __pycache__/
 /ext/gsplat_native/*.o
 /ext/gsplat_native/*.bundle
 /ext/gsplat_native/*.so
+/ext/gsplat_native/*.dSYM/
 /lib/gsplat/gsplat_native.bundle
 /lib/gsplat/gsplat_native.so

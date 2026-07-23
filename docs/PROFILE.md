@@ -23,3 +23,15 @@ is the second-largest component. This satisfies the P10 profiling prerequisite a
 implementation order: bridge first, projection/SH for coverage, intersection sort, then the
 dominant raster forward/backward path. These numbers are a small-scene attribution profile, not
 the final P12 throughput benchmark.
+
+## Native projection and SH — 2026-07-23
+
+With the P10-2 extension loaded (`GSPLAT_BACKEND=auto`) on the same workload:
+
+| Operation | Ruby | Native/auto | Speedup |
+|---|---:|---:|---:|
+| Projection | 1.010 ms | 0.257 ms | 3.9× |
+| Spherical harmonics | 0.393 ms | 0.043 ms | 9.1× |
+
+The C paths cover contiguous float32 forward calls. Float64, masked SH, and analytic backward use
+the Ruby implementation to preserve the existing numerical behavior.

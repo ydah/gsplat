@@ -26,3 +26,13 @@ Record only decisions that differ from, clarify, or resolve ambiguity in the des
 - Raster backward uses OpenMP atomic scatter-add instead of per-worker full gradient buffers. The
   100k/800×800 benchmark scales from 279.790 ms at one thread to 79.252 ms at eight threads while
   avoiding `O(workers × N × channels)` temporary memory.
+
+### 2026-07-23: Distorted cameras use the shared Ruby projection (P11-5)
+
+- Equidistant fisheye and OpenCV radial/tangential/thin-prism projection use one float32/float64
+  implementation for both backends. Selecting `:native` delegates these camera models to the Ruby
+  path so camera semantics and numerical derivatives cannot diverge.
+- Pinhole radial coefficients follow gsplat 1.5.3's rational order: `k1..k3` form the numerator and
+  `k4..k6` form the denominator. Fisheye coefficients multiply `theta^3..theta^9`.
+- Distortion coefficients are calibration constants. Gradients are provided for Gaussian geometry,
+  while coefficient and intrinsic optimization remain outside this phase.

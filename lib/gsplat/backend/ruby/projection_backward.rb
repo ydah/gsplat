@@ -13,7 +13,8 @@ module Gsplat
         prepared = RubyProjection.prepare_inputs(
           means, covars, quaternions, scales, viewmats, intrinsics, width, height,
           options.fetch(:eps2d), options.fetch(:near_plane), options.fetch(:far_plane),
-          options.fetch(:radius_clip), options.fetch(:camera_model)
+          options.fetch(:radius_clip), options.fetch(:camera_model),
+          options[:radial_coeffs], options[:tangential_coeffs], options[:thin_prism_coeffs]
         )
         means, expanded_covars, viewmats, intrinsics = prepared
         camera_means, camera_covars = Math::CameraProjection.world_to_cam(means, expanded_covars, viewmats)
@@ -29,9 +30,12 @@ module Gsplat
           intrinsics,
           width,
           height,
-          camera_model
+          camera_model,
+          radial_coeffs: options[:radial_coeffs],
+          tangential_coeffs: options[:tangential_coeffs],
+          thin_prism_coeffs: options[:thin_prism_coeffs]
         )
-        jacobians = projection_jacobians(projection_means, intrinsics, width, height, camera_model)
+        jacobians = projection_jacobians(projection_means, intrinsics, width, height, options)
         output_gradients = validate_output_gradients(
           means.class,
           means2d,
@@ -50,7 +54,7 @@ module Gsplat
           options.fetch(:eps2d),
           width,
           height,
-          camera_model
+          options
         )
         grad_means, grad_expanded_covars = world_to_cam_vjp(
           grad_camera_means,
@@ -77,13 +81,25 @@ module Gsplat
       end
       private_class_method :safe_means
 
-      def projection_jacobians(means, intrinsics, width, height, camera_model)
+      def projection_jacobians(means, intrinsics, width, height, options)
         output = means.class.zeros(means.shape[0], means.shape[1], 2, 3)
         means.shape[0].times do |camera_index|
           camera_means = means[camera_index, true, true]
           camera_intrinsics = intrinsics[camera_index, true, true]
+          camera_model = options.fetch(:camera_model)
+          extended = camera_model.to_s == "fisheye" ||
+                     %i[radial_coeffs tangential_coeffs thin_prism_coeffs].any? { |key| options[key] }
           _, jacobians = if camera_model.to_s == "ortho"
                            Math::CameraProjection.ortho_camera(camera_means, camera_intrinsics)
+                         elsif extended
+                           Math::CameraDistortion.project_camera(
+                             camera_means,
+                             camera_intrinsics,
+                             camera_model,
+                             radial: coefficient_row(options[:radial_coeffs], camera_index),
+                             tangential: coefficient_row(options[:tangential_coeffs], camera_index),
+                             thin_prism: coefficient_row(options[:thin_prism_coeffs], camera_index)
+                           )
                          else
                            Math::CameraProjection.pinhole_camera(
                              camera_means, camera_intrinsics, width, height
@@ -94,6 +110,11 @@ module Gsplat
         output
       end
       private_class_method :projection_jacobians
+
+      def coefficient_row(value, camera_index)
+        value && value[camera_index, true].to_a
+      end
+      private_class_method :coefficient_row
 
       # rubocop:disable Metrics/ParameterLists
       def validate_output_gradients(type, means2d, grad_means2d, grad_depths, grad_conics, grad_compensations)
@@ -120,7 +141,7 @@ module Gsplat
 
       # rubocop:disable Metrics/ParameterLists
       def projection_vjp(means, covars, covars2d, jacobians, intrinsics, gradients, eps2d, width, height,
-                         camera_model)
+                         options)
         # rubocop:enable Metrics/ParameterLists
         grad_means2d, grad_depths, grad_conics, grad_compensations = gradients
         grad_covars2d = covariance_output_vjp(
@@ -146,7 +167,7 @@ module Gsplat
           grad_jacobians.reshape(*jacobians.shape),
           width,
           height,
-          camera_model
+          options
         )
         [grad_camera_means, grad_camera_covars]
       end

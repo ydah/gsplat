@@ -172,6 +172,17 @@ class RasterizationTest < Minitest::Test
     end
   end
 
+  def test_fisheye_distortion_high_level_pipeline
+    rendered, alphas, meta = render(
+      camera_model: "fisheye",
+      radial_coeffs: Numo::DFloat[[0.01, -0.001, 0, 0]]
+    )
+
+    assert_equal [1, 3, 4, 3], rendered.shape
+    assert_equal [1, 3, 4, 1], alphas.shape
+    assert_equal [1, 2, 2], meta.fetch(:radii).shape
+  end
+
   def test_packed_covariance_backward_reaches_input
     packed, = Gsplat.quat_scale_to_covar_preci(
       @quaternions,

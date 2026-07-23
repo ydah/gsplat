@@ -8,15 +8,26 @@ module Gsplat
 
       # rubocop:disable Metrics/ParameterLists
       def camera_mean_vjp(means, intrinsics, grad_means2d, grad_depths, grad_jacobians, width, height,
-                          camera_model)
+                          options)
         # rubocop:enable Metrics/ParameterLists
         output = means.class.zeros(*means.shape)
+        # rubocop:disable Metrics/BlockLength
         means.shape[0].times do |camera_index|
           camera_means = means[camera_index, true, true]
           camera_intrinsics = intrinsics[camera_index, true, true]
           output_gradient = grad_means2d[camera_index, true, true]
+          camera_model = options.fetch(:camera_model)
           gradient = if camera_model.to_s == "ortho"
                        ortho_mean_vjp(camera_means, camera_intrinsics, output_gradient)
+                     elsif extended_camera?(options)
+                       distorted_mean_vjp(
+                         camera_means,
+                         camera_intrinsics,
+                         output_gradient,
+                         grad_jacobians[camera_index, true, true, true],
+                         options,
+                         camera_index
+                       )
                      else
                        projected_mean_vjp(camera_means, camera_intrinsics, output_gradient) +
                          pinhole_jacobian_vjp(
@@ -30,9 +41,54 @@ module Gsplat
           gradient[true, 2] += grad_depths[camera_index, true]
           output[camera_index, true, true] = gradient
         end
+        # rubocop:enable Metrics/BlockLength
         output
       end
       private_class_method :camera_mean_vjp
+
+      def extended_camera?(options)
+        options.fetch(:camera_model).to_s == "fisheye" ||
+          %i[radial_coeffs tangential_coeffs thin_prism_coeffs].any? { |key| options[key] }
+      end
+      private_class_method :extended_camera?
+
+      # rubocop:disable Metrics/AbcSize, Metrics/ParameterLists
+      def distorted_mean_vjp(means, intrinsics, grad_projected, grad_jacobians, options, camera_index)
+        # rubocop:enable Metrics/AbcSize, Metrics/ParameterLists
+        output = means.class.zeros(*means.shape)
+        epsilon = means.instance_of?(Numo::DFloat) ? 1e-4 : 2e-3
+        means.shape[0].times do |gaussian_index|
+          point = means[gaussian_index, true].to_a
+          3.times do |axis|
+            positive = point.dup
+            negative = point.dup
+            positive[axis] += epsilon
+            negative[axis] -= epsilon
+            positive_outputs = distorted_point_outputs(positive, intrinsics, options, camera_index, means.class)
+            negative_outputs = distorted_point_outputs(negative, intrinsics, options, camera_index, means.class)
+            projected_derivative = (positive_outputs[0] - negative_outputs[0]) / (2 * epsilon)
+            jacobian_derivative = (positive_outputs[1] - negative_outputs[1]) / (2 * epsilon)
+            output[gaussian_index, axis] =
+              (projected_derivative * grad_projected[gaussian_index, true]).sum +
+              (jacobian_derivative * grad_jacobians[gaussian_index, true, true]).sum
+          end
+        end
+        output
+      end
+      private_class_method :distorted_mean_vjp
+
+      def distorted_point_outputs(point, intrinsics, options, camera_index, type)
+        projected, jacobians = Math::CameraDistortion.project_camera(
+          type.cast([point]),
+          intrinsics,
+          options.fetch(:camera_model),
+          radial: coefficient_row(options[:radial_coeffs], camera_index),
+          tangential: coefficient_row(options[:tangential_coeffs], camera_index),
+          thin_prism: coefficient_row(options[:thin_prism_coeffs], camera_index)
+        )
+        [projected.flatten, jacobians.reshape(2, 3)]
+      end
+      private_class_method :distorted_point_outputs
 
       # rubocop:disable Metrics/AbcSize
       def projected_mean_vjp(means, intrinsics, gradient)

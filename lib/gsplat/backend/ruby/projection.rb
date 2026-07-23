@@ -8,17 +8,27 @@ module Gsplat
 
       # rubocop:disable Metrics/ParameterLists
       def forward(means, covars, quaternions, scales, viewmats, intrinsics, width, height,
-                  eps2d:, near_plane:, far_plane:, radius_clip:, calc_compensations:, camera_model:)
+                  eps2d:, near_plane:, far_plane:, radius_clip:, calc_compensations:, camera_model:,
+                  radial_coeffs: nil, tangential_coeffs: nil, thin_prism_coeffs: nil)
         # rubocop:enable Metrics/ParameterLists
         inputs = prepare_inputs(
           means, covars, quaternions, scales, viewmats, intrinsics, width, height,
-          eps2d, near_plane, far_plane, radius_clip, camera_model
+          eps2d, near_plane, far_plane, radius_clip, camera_model,
+          radial_coeffs, tangential_coeffs, thin_prism_coeffs
         )
         means, covars, viewmats, intrinsics = inputs
         camera_means, camera_covars = Math::CameraProjection.world_to_cam(means, covars, viewmats)
         projection_means = projection_safe_means(camera_means, near_plane, far_plane)
         means2d, covars2d = project(
-          projection_means, camera_covars, intrinsics, width, height, camera_model
+          projection_means,
+          camera_covars,
+          intrinsics,
+          width,
+          height,
+          camera_model,
+          radial_coeffs: radial_coeffs,
+          tangential_coeffs: tangential_coeffs,
+          thin_prism_coeffs: thin_prism_coeffs
         )
         finish_projection(
           camera_means,
@@ -34,10 +44,11 @@ module Gsplat
         )
       end
 
-      # rubocop:disable Metrics/ParameterLists
+      # rubocop:disable Metrics/AbcSize, Metrics/ParameterLists
       def prepare_inputs(means, covars, quaternions, scales, viewmats, intrinsics, width, height,
-                         eps2d, near_plane, far_plane, radius_clip, camera_model)
-        # rubocop:enable Metrics/ParameterLists
+                         eps2d, near_plane, far_plane, radius_clip, camera_model,
+                         radial_coeffs = nil, tangential_coeffs = nil, thin_prism_coeffs = nil)
+        # rubocop:enable Metrics/AbcSize, Metrics/ParameterLists
         unless means.is_a?(Numo::NArray) && [Numo::SFloat, Numo::DFloat].include?(means.class)
           raise ArgumentError, "means must be Numo::SFloat or Numo::DFloat"
         end
@@ -63,6 +74,10 @@ module Gsplat
           far_plane: far_plane,
           radius_clip: radius_clip,
           camera_model: camera_model
+        )
+        validate_distortion!(
+          viewmats.shape[0], camera_model,
+          radial_coeffs, tangential_coeffs, thin_prism_coeffs
         )
         [means, covars, viewmats, intrinsics]
       end
@@ -109,17 +124,50 @@ module Gsplat
         end
         raise ArgumentError, "eps2d and radius_clip must be non-negative" if eps2d.negative? || radius_clip.negative?
         raise ArgumentError, "near_plane must be less than far_plane" unless near_plane < far_plane
-        return if %w[pinhole ortho].include?(camera_model.to_s)
+        return if %w[pinhole ortho fisheye].include?(camera_model.to_s)
 
-        raise ArgumentError, "camera_model must be \"pinhole\" or \"ortho\""
+        raise ArgumentError, "camera_model must be \"pinhole\", \"ortho\", or \"fisheye\""
       end
       private_class_method :validate_options!
 
+      def validate_distortion!(camera_count, camera_model, radial, tangential, thin_prism)
+        if camera_model.to_s == "ortho" && [radial, tangential, thin_prism].any?
+          raise ArgumentError, "distortion coefficients are unsupported for orthographic cameras"
+        end
+
+        expected_radial = camera_model.to_s == "fisheye" ? [4] : [4, 6]
+        validate_coefficients!(radial, camera_count, expected_radial, "radial_coeffs")
+        validate_coefficients!(tangential, camera_count, [2], "tangential_coeffs")
+        validate_coefficients!(thin_prism, camera_count, [4], "thin_prism_coeffs")
+      end
+      private_class_method :validate_distortion!
+
+      def validate_coefficients!(value, camera_count, widths, name)
+        return unless value
+        unless value.is_a?(Numo::NArray) && [Numo::SFloat, Numo::DFloat].include?(value.class) &&
+               value.ndim == 2 && value.shape[0] == camera_count && widths.include?(value.shape[1])
+          raise ShapeError, "expected #{name} [#{camera_count},#{widths.join(' or ')}]"
+        end
+      end
+      private_class_method :validate_coefficients!
+
       # rubocop:disable Metrics/ParameterLists
-      def project(means, covars, intrinsics, width, height, camera_model)
+      def project(means, covars, intrinsics, width, height, camera_model,
+                  radial_coeffs: nil, tangential_coeffs: nil, thin_prism_coeffs: nil)
         # rubocop:enable Metrics/ParameterLists
         if camera_model.to_s == "ortho"
           return Math::CameraProjection.ortho_proj(means, covars, intrinsics, width, height)
+        end
+        if camera_model.to_s == "fisheye" || [radial_coeffs, tangential_coeffs, thin_prism_coeffs].any?
+          return Math::CameraProjection.distorted_proj(
+            means,
+            covars,
+            intrinsics,
+            camera_model,
+            radial_coeffs: radial_coeffs,
+            tangential_coeffs: tangential_coeffs,
+            thin_prism_coeffs: thin_prism_coeffs
+          )
         end
 
         Math::CameraProjection.persp_proj(means, covars, intrinsics, width, height)

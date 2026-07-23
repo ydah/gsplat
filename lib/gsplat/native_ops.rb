@@ -27,14 +27,18 @@ module Gsplat
 
     # rubocop:disable Metrics/ParameterLists
     def projection_forward(means, covars, quaternions, scales, viewmats, intrinsics, width, height,
-                           eps2d:, near_plane:, far_plane:, radius_clip:, calc_compensations:, camera_model:)
+                           eps2d:, near_plane:, far_plane:, radius_clip:, calc_compensations:, camera_model:,
+                           radial_coeffs: nil, tangential_coeffs: nil, thin_prism_coeffs: nil)
       # rubocop:enable Metrics/ParameterLists
-      unless means.is_a?(Numo::SFloat)
+      extended = camera_model.to_s == "fisheye" ||
+                 [radial_coeffs, tangential_coeffs, thin_prism_coeffs].any?
+      unless means.is_a?(Numo::SFloat) && !extended
         return Backend::RubyProjection.forward(
           means, covars, quaternions, scales, viewmats, intrinsics, width, height,
           eps2d: eps2d, near_plane: near_plane, far_plane: far_plane,
           radius_clip: radius_clip, calc_compensations: calc_compensations,
-          camera_model: camera_model
+          camera_model: camera_model, radial_coeffs: radial_coeffs,
+          tangential_coeffs: tangential_coeffs, thin_prism_coeffs: thin_prism_coeffs
         )
       end
       prepared = Backend::RubyProjection.send(

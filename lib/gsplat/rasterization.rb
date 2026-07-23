@@ -11,7 +11,8 @@ module Gsplat
                covars: nil, near_plane: 0.01, far_plane: 1e10, radius_clip: 0.0, eps2d: 0.3,
                sh_degree: nil, tile_size: 16, backgrounds: nil, render_mode: "RGB",
                rasterize_mode: "classic", camera_model: "pinhole", absgrad: false,
-               channel_chunk: 32, packed: false, global_z_order: true)
+               channel_chunk: 32, packed: false, global_z_order: true,
+               radial_coeffs: nil, tangential_coeffs: nil, thin_prism_coeffs: nil)
       # rubocop:enable Metrics/ParameterLists, Naming/MethodParameterName
       RasterizationValidation.validate_options!(
         render_mode, rasterize_mode, sh_degree, tile_size, channel_chunk, width, height
@@ -36,7 +37,10 @@ module Gsplat
         far_plane: far_plane,
         radius_clip: radius_clip,
         calc_compensations: calculate_compensations,
-        camera_model: camera_model
+        camera_model: camera_model,
+        radial_coeffs: radial_coeffs,
+        tangential_coeffs: tangential_coeffs,
+        thin_prism_coeffs: thin_prism_coeffs
       )
       projected_colors = RasterizationHelpers.prepare_colors(
         means, colors, viewmats, radii, camera_count, sh_degree

@@ -72,6 +72,33 @@ module Gsplat
         [means2d, covars2d]
       end
 
+      # rubocop:disable Metrics/ParameterLists
+      def distorted_proj(means, covars, intrinsics, camera_model, radial_coeffs: nil,
+                         tangential_coeffs: nil, thin_prism_coeffs: nil)
+        # rubocop:enable Metrics/ParameterLists
+        camera_count = means.shape[0]
+        gaussian_count = means.shape[1]
+        means2d = means.class.zeros(camera_count, gaussian_count, 2)
+        covars2d = means.class.zeros(camera_count, gaussian_count, 2, 2)
+        camera_count.times do |camera_index|
+          projected, jacobians = CameraDistortion.project_camera(
+            means[camera_index, true, true],
+            intrinsics[camera_index, true, true],
+            camera_model,
+            radial: radial_coeffs && radial_coeffs[camera_index, true].to_a,
+            tangential: tangential_coeffs && tangential_coeffs[camera_index, true].to_a,
+            thin_prism: thin_prism_coeffs && thin_prism_coeffs[camera_index, true].to_a
+          )
+          means2d[camera_index, true, true] = projected
+          transformed = Mat.matmul_batch(jacobians, covars[camera_index, true, true, true])
+          covars2d[camera_index, true, true, true] = Mat.matmul_batch(
+            transformed,
+            jacobians.transpose(0, 2, 1)
+          )
+        end
+        [means2d, covars2d]
+      end
+
       def validate_world_inputs(means, covars, viewmats)
         validate_float_array!(means, "means")
         covars = means.class.cast(covars)

@@ -29,7 +29,7 @@ def all_cases() -> list[Case]:
         Case("proj_covars_c1_n1000", "proj_covars", {"cameras": 1, "count": 1_000}),
         *(Case(f"sh_deg{degree}", "sh", {"degree": degree}) for degree in range(5)),
     ]
-    for camera_model in ("pinhole", "ortho"):
+    for camera_model in ("pinhole", "ortho", "fisheye"):
         for cameras, count in ((1, 1_000), (3, 1_000), (1, 10_000), (3, 10_000)):
             name = f"proj_{camera_model}_c{cameras}_n{count}"
             cases.append(Case(name, "proj", {"camera_model": camera_model, "cameras": cameras, "count": count}))
@@ -41,6 +41,7 @@ def all_cases() -> list[Case]:
             Case("raster_features8", "raster", {"channels": 8}, requires_cuda=True),
             Case("raster_features32", "raster", {"channels": 32}, requires_cuda=True),
             Case("raster_features40", "raster", {"channels": 40}, requires_cuda=True),
+            Case("render_fisheye_distorted", "fisheye_distorted", {}, requires_cuda=True),
             Case("strategy_default_masks", "strategy", {}),
             Case("relocation_mcmc", "relocation", {}, requires_cuda=True),
             Case("ssim_rgb", "ssim", {}),
@@ -104,6 +105,7 @@ def generate(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
         "proj_covars": _projection_covars_case,
         "isect": _isect_case,
         "raster": _raster_case,
+        "fisheye_distorted": _fisheye_distorted_case,
         "render": _render_case,
         "strategy": _strategy_case,
         "relocation": _relocation_case,
@@ -308,6 +310,28 @@ def _raster_case(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
         "grad_opacities": opacities.grad,
         "grad_backgrounds": backgrounds.grad,
     }
+
+
+def _fisheye_distorted_case(_case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
+    torch, device = runtime["torch"], runtime["device"]
+    from gsplat import rasterization
+
+    scene = _scene(runtime, 64)
+    colors = torch.rand(64, 3, device=device)
+    radial_coeffs = torch.tensor([[0.01, -0.002, 0.0003, 0.0]], device=device)
+    render_colors, render_alphas, meta = rasterization(
+        scene["means"], scene["quats"], scene["scales"], scene["opacities"], colors,
+        scene["viewmats"], scene["ks"], scene["width"], scene["height"],
+        camera_model="fisheye", radial_coeffs=radial_coeffs, with_ut=True
+    )
+    return tensor_payload({
+        **scene,
+        "colors": colors,
+        "radial_coeffs": radial_coeffs,
+        "render_colors": render_colors,
+        "render_alphas": render_alphas,
+        "radii": meta["radii"],
+    })
 
 
 def _render_case(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:

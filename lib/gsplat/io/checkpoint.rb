@@ -6,8 +6,20 @@ module Gsplat
   module IO
     # Portable NPZ checkpoint for parameters, Adam moments, step, and config.
     module Checkpoint
+      # Current checkpoint schema version.
       VERSION = 1
+      # Separator reserved for structured NPZ entry names.
       SEPARATOR = "___"
+      # Loaded checkpoint payload.
+      #
+      # @!attribute params
+      #   @return [Hash{Symbol=>Numo::NArray}]
+      # @!attribute optimizer_states
+      #   @return [Hash] optimizer moments grouped by optimizer and parameter
+      # @!attribute step
+      #   @return [Integer]
+      # @!attribute config
+      #   @return [Hash]
       Snapshot = Data.define(:params, :optimizer_states, :step, :config)
 
       module_function
@@ -35,6 +47,10 @@ module Gsplat
         Npy.write_npz(target, arrays)
       end
 
+      # Loads parameters and optimizer state without mutating live objects.
+      #
+      # @param source [String, #read] NPZ checkpoint path or IO
+      # @return [Snapshot]
       def load(source)
         arrays = Npy.read_npz(source)
         version = arrays.fetch("checkpoint_version")[0].to_i
@@ -50,6 +66,12 @@ module Gsplat
         raise Gsplat::Error, "invalid checkpoint: #{e.message}"
       end
 
+      # Loads a checkpoint into existing Variables and optimizers.
+      #
+      # @param source [String, #read] NPZ checkpoint path or IO
+      # @param params [Hash{Symbol=>Autograd::Variable}]
+      # @param optimizers [Hash{Symbol=>Optim::Adam}]
+      # @return [Snapshot]
       def restore!(source, params:, optimizers:)
         snapshot = load(source)
         snapshot.params.each do |name, value|

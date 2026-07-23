@@ -5,12 +5,17 @@ require "stringio"
 require_relative "zip_archive"
 
 module Gsplat
+  # File formats and dataset readers used by training and interchange.
   module IO
     # NumPy v1.0 NPY and NPZ interoperability.
     module Npy
+      # Binary prefix defined by the NumPy NPY format.
       MAGIC = "\x93NUMPY".b
+      # NPY format version emitted and accepted by this codec.
       VERSION = [1, 0].freeze
+      # Header byte alignment used by NPY v1.0.
       HEADER_ALIGNMENT = 64
+      # Mapping from supported Numo types to NumPy descriptors and pack formats.
       DESCRIPTORS = {
         Numo::SFloat => ["<f4", "e*", 4],
         Numo::DFloat => ["<f8", "E*", 8],
@@ -20,6 +25,7 @@ module Gsplat
         Numo::Int64 => ["<i8", "q<*", 8],
         Numo::Bit => ["|b1", "C*", 1]
       }.freeze
+      # Reverse descriptor-to-Numo type mapping.
       TYPES = DESCRIPTORS.to_h { |type, metadata| [metadata.first, type] }.freeze
 
       module_function

@@ -46,6 +46,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P11-8 | Complete (golden pending) | 2026-07-24 | 2DGS API, auxiliary geometry buffers and Trainer mode |
 | P11-9 | Complete (golden pending) | 2026-07-24 | World-space color evaluation, ray-facing accumulated normals and numerical VJPs |
 | P11-10 | Complete (golden pending) | 2026-07-24 | Iterative per-pixel Gaussian contribution-index enumeration |
+| P12-1 | Complete | 2026-07-24 | README/Migration guide, executable quick start, example smoke tests and 100% public YARD coverage |
 
 ## Phase gates
 
@@ -151,3 +152,22 @@ This file is the restart point for implementation sessions. Read it after `READM
 - The explicit `:native` suite passes with one and eight OpenMP threads.
 - Full suite: 137 tests, 845 assertions, no failures, 14 documented skips.
 - RuboCop: no offenses.
+
+### P11 — Complete (golden-data gate pending)
+
+- Extended rendering covers feature chunking, direct covariance, elliptical radii, distorted/fisheye
+  cameras, distance modes, eval3d normals, 2DGS, SelectiveAdam, and contribution enumeration.
+- Each extension has analytic/property coverage and a pinned Python generator case where upstream
+  execution is required. CUDA fixtures remain the documented external gate.
+- Both backend selections pass the same 181-test, 977-assertion suite with 22 documented skips.
+- RuboCop: no offenses.
+
+### P12-1 — Complete
+
+- README includes installation, executable quick start, conventions, API mapping, feature status,
+  limitations, and the three production examples. `docs/MIGRATION.md` covers Python migration.
+- `test/readme_test.rb` executes the exact quick-start fence. Example smoke tests run a real image-fit
+  step, parse all COLMAP fixture records, and validate a PLY orbit setup without optional image gems.
+- `yard stats`: 40 files, 129 methods, 124 attributes, 22 constants, undocumented 0 (100%).
+- Ruby and native selections: 186 tests, 1,005 assertions, no failures, 22 documented skips.
+- RuboCop: 130 files, no offenses.

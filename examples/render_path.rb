@@ -5,15 +5,23 @@ require "fileutils"
 require "optparse"
 require "gsplat"
 
-options = { ply: nil, output: "renders", frames: 60, width: 512, height: 512 }
-OptionParser.new do |parser|
-  parser.banner = "Usage: bundle exec ruby examples/render_path.rb --ply FILE [options]"
-  parser.on("--ply FILE") { |value| options[:ply] = value }
-  parser.on("--output PATH") { |value| options[:output] = value }
-  parser.on("--frames N", Integer) { |value| options[:frames] = value }
-  parser.on("--width N", Integer) { |value| options[:width] = value }
-  parser.on("--height N", Integer) { |value| options[:height] = value }
-end.parse!
+options = { ply: nil, output: "renders", frames: 60, width: 512, height: 512, dry_run: false }
+parser = OptionParser.new do |options_parser|
+  options_parser.banner = "Usage: bundle exec ruby examples/render_path.rb --ply FILE [options]"
+  options_parser.on("--ply FILE") { |value| options[:ply] = value }
+  options_parser.on("--output PATH") { |value| options[:output] = value }
+  options_parser.on("--frames N", Integer) { |value| options[:frames] = value }
+  options_parser.on("--width N", Integer) { |value| options[:width] = value }
+  options_parser.on("--height N", Integer) { |value| options[:height] = value }
+  options_parser.on("--dry-run", "Validate the PLY and camera path without writing images") do
+    options[:dry_run] = true
+  end
+  options_parser.on_tail("-h", "--help", "Show this help") do
+    puts options_parser
+    exit
+  end
+end
+parser.parse!
 abort "error: --ply is required" unless options[:ply]
 
 def normalize(vector)
@@ -61,6 +69,16 @@ intrinsics = Numo::SFloat[
    [0, focal, options.fetch(:height) / 2.0],
    [0, 0, 1]]
 ]
+if options.fetch(:dry_run)
+  warn format(
+    "render path valid: gaussians=%<gaussians>d frames=%<frames>d degree=%<degree>d",
+    gaussians: params.fetch(:means).shape[0],
+    frames: options.fetch(:frames),
+    degree: degree
+  )
+  exit
+end
+
 FileUtils.mkdir_p(options.fetch(:output))
 
 options.fetch(:frames).times do |frame|

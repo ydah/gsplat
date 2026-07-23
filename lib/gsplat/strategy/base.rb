@@ -4,6 +4,7 @@ module Gsplat
   module Strategy
     # Shared strategy lifecycle and parameter/optimizer validation.
     class Base
+      # Parameter names required by every structural strategy.
       REQUIRED_KEYS = %i[means quats scales opacities sh0 shN].freeze
 
       def initialize_state(scene_scale:)

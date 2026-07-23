@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
 module Gsplat
+  # Optimizers and learning-rate schedules for autograd Variables.
   module Optim
     # Dense Adam optimizer with editable first-axis state for densification.
     class Adam
+      # Immutable parameter-group configuration.
       Group = Data.define(:name, :variable, :lr, :eps)
+      # Adam step count and first/second moments.
       State = Data.define(:step, :exp_avg, :exp_avg_sq)
 
       attr_reader :beta1, :beta2, :groups
@@ -50,6 +53,9 @@ module Gsplat
         self
       end
 
+      # Returns lazily initialized moment state for one or all groups.
+      #
+      # @return [State, Hash{Symbol=>State}]
       def state(name = nil)
         return state_for(name.to_sym) if name
         return state_for(groups.keys.first) if groups.length == 1
@@ -57,6 +63,9 @@ module Gsplat
         groups.keys.to_h { |key| [key, state_for(key)] }
       end
 
+      # Returns the current learning rate for one or all groups.
+      #
+      # @return [Numeric, Hash{Symbol=>Numeric}]
       def learning_rate(name = nil)
         return groups.fetch(name.to_sym).lr if name
         return groups.values.first.lr if groups.length == 1
@@ -80,6 +89,10 @@ module Gsplat
         @groups[key] = Group.new(name: key, variable: group.variable, lr: value, eps: group.eps)
       end
 
+      # Selects first-axis optimizer rows after pruning parameters.
+      #
+      # @param selection [Numo::Bit, Array<Integer>, Range]
+      # @return [self]
       def select!(selection)
         groups.each_key do |name|
           current = state_for(name)
@@ -107,6 +120,10 @@ module Gsplat
         self
       end
 
+      # Clears moments at selected first-axis rows.
+      #
+      # @param indices [Integer, Array<Integer>, Range]
+      # @return [self]
       def zero_state_at!(indices)
         groups.each_key do |name|
           current = state_for(name)

@@ -3,6 +3,8 @@
 module Gsplat
   # Lightweight reverse-mode differentiation for coarse gsplat operations.
   module Autograd
+    # Thread-local key used to suspend graph recording.
+    # @api private
     GRAD_ENABLED_KEY = :gsplat_autograd_grad_enabled
 
     # Per-operation values retained for the backward pass.

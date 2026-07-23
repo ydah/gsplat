@@ -5,6 +5,7 @@ require_relative "../backend/ruby/accumulate_backward"
 
 # Brute-force reference rasterization API.
 module Gsplat
+  # Differentiable operation classes and low-level tensor adapters.
   module Ops
     # Differentiable reference alpha compositor.
     class Accumulate < Autograd::Function
@@ -29,6 +30,8 @@ module Gsplat
           [render_colors, render_alphas]
         end
 
+        # Propagates color and alpha gradients through the reference compositor.
+        # @api private
         def backward(context, grad_render_colors, grad_render_alphas)
           saved = context.saved_values
           gradients = Backend.dispatch(

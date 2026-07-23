@@ -4,6 +4,7 @@ module Gsplat
   module Strategy
     # 3D Gaussian Splatting as Markov Chain Monte Carlo strategy.
     class MCMC < Base
+      # Upstream-compatible relocation and noise defaults.
       DEFAULTS = {
         cap_max: 1_000_000,
         noise_lr: 5e5,
@@ -14,7 +15,8 @@ module Gsplat
         verbose: false
       }.freeze
 
-      attr_reader(*DEFAULTS.keys)
+      attr_reader :cap_max, :min_opacity, :noise_lr, :refine_every,
+                  :refine_start_iter, :refine_stop_iter, :verbose
 
       def initialize(**options)
         super()
@@ -25,6 +27,10 @@ module Gsplat
         validate_options!
       end
 
+      # Creates strategy state including the relocation binomial table.
+      #
+      # @param scene_scale [Numeric]
+      # @return [Hash]
       def initialize_state(scene_scale: 1.0)
         super.merge(binoms: Gsplat::Ops::Relocation.binomial_table(n_max: 51))
       end

@@ -16,6 +16,8 @@ module Gsplat
           )
         end
 
+        # Computes a central-difference VJP for the portable eval3d path.
+        # @api private
         def backward(context, grad_rendered, grad_alphas, grad_normals)
           *inputs, options = context.saved_values
           gradient_outputs = [grad_rendered, grad_alphas, grad_normals]

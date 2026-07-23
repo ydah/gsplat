@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
 module Gsplat
+  # Densification and relocation policies for training.
   module Strategy
     # Structural parameter edits synchronized with Adam moment buffers.
     module Ops
       module_function
 
+      # Appends exact copies of selected Gaussian rows and zeroed moments.
+      #
+      # @return [Integer] number of rows appended
       def duplicate!(params, optimizers, mask)
         indices = selected_indices(mask, parameter_count(params))
         return 0 if indices.empty?
@@ -19,6 +23,9 @@ module Gsplat
         indices.size
       end
 
+      # Removes selected Gaussian rows and matching optimizer moments.
+      #
+      # @return [Integer] number of rows removed
       def remove!(params, optimizers, mask)
         validate_mask!(mask, parameter_count(params))
         keep = Numo::Bit.cast(mask).eq(0)
@@ -33,6 +40,9 @@ module Gsplat
         removed
       end
 
+      # Replaces selected Gaussians with two sampled children.
+      #
+      # @return [Integer] number of parents split
       def split!(params, optimizers, mask, rng: Gsplat.rng)
         count = parameter_count(params)
         indices = selected_indices(mask, count)

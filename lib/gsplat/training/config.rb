@@ -4,6 +4,7 @@ module Gsplat
   module Training
     # Trainer hyperparameters matching the upstream simple trainer defaults.
     class Config
+      # Default training, optimizer, evaluation, and output options.
       DEFAULTS = {
         max_steps: 30_000,
         batch_size: 1,
@@ -34,7 +35,15 @@ module Gsplat
         seed: 42
       }.freeze
 
-      attr_reader(*DEFAULTS.keys)
+      # rubocop:disable Naming/MethodName
+      attr_reader :batch_size, :eval_steps, :far_plane, :init_opacity,
+                  :init_scale, :log_every, :max_steps, :means_lr,
+                  :means_lr_final, :model_type, :near_plane, :opacities_lr,
+                  :opacity_reg, :output_dir, :quats_lr, :random_background,
+                  :rasterize_mode, :save_steps, :scales_lr, :scale_reg, :seed,
+                  :sh0_lr, :shN_lr, :sh_degree, :sh_degree_interval,
+                  :ssim_lambda, :tile_size
+      # rubocop:enable Naming/MethodName
 
       def initialize(**options)
         unknown = options.keys - DEFAULTS.keys
@@ -47,6 +56,9 @@ module Gsplat
         validate!
       end
 
+      # Returns an independent hash suitable for checkpoint metadata.
+      #
+      # @return [Hash{Symbol=>Object}]
       def to_h
         DEFAULTS.keys.to_h { |name| [name, public_send(name)] }
       end

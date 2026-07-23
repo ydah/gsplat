@@ -6,8 +6,11 @@ module Gsplat
   module IO
     # Inria-compatible Gaussian-splat PLY input and output.
     module Ply
+      # Leading vertex properties in the Inria layout.
       BASE_PROPERTIES = %w[x y z nx ny nz].freeze
+      # Properties following spherical-harmonic coefficients.
       TRAILING_PROPERTIES = %w[opacity scale_0 scale_1 scale_2 rot_0 rot_1 rot_2 rot_3].freeze
+      # Minimum property set required for a readable Gaussian model.
       REQUIRED_PROPERTIES = (%w[x y z] + %w[f_dc_0 f_dc_1 f_dc_2] + TRAILING_PROPERTIES).freeze
 
       module_function

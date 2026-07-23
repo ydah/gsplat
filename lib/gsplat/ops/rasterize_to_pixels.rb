@@ -36,6 +36,8 @@ module Gsplat
           [render_colors, render_alphas]
         end
 
+        # Propagates pixel color and alpha gradients to projected attributes.
+        # @api private
         def backward(context, grad_render_colors, grad_render_alphas)
           saved = context.saved_values
           means2d, conics, colors, opacities, backgrounds, masks, width, height,
@@ -69,6 +71,13 @@ module Gsplat
   end
 
   class << self
+    # Alpha-composites sorted tile intersections.
+    #
+    # Projected inputs have shapes `means2d [C,N,2]`, `conics [C,N,3]`,
+    # `colors [C,N,D]`, and `opacities [C,N]`. Outputs are color
+    # `[C,H,W,D]` and alpha `[C,H,W,1]`.
+    #
+    # @return [Array<(Numo::NArray, Autograd::Variable)>]
     # rubocop:disable Metrics/ParameterLists
     def rasterize_to_pixels(means2d, conics, colors, opacities, width, height, tile_size,
                             isect_offsets, flatten_ids, backgrounds: nil, masks: nil, absgrad: false)

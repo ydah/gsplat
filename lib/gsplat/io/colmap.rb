@@ -7,13 +7,18 @@ module Gsplat
   module IO
     # COLMAP sparse reconstruction reader and camera conversion utilities.
     module Colmap
+      # Parsed camera calibration record.
       Camera = Data.define(:id, :model, :width, :height, :params, :intrinsics, :distortion)
+      # Parsed registered-image pose and feature observations.
       ImageRecord = Data.define(
         :id, :qvec, :tvec, :camera_id, :name, :points2d, :point3d_ids, :rotation, :world_to_camera
       )
+      # Parsed sparse 3D point and visibility track.
       Point3D = Data.define(:id, :xyz, :rgb, :error, :track)
+      # Complete sparse model returned by {.read}.
       Dataset = Data.define(:cameras, :images, :points3d, :path)
 
+      # Supported COLMAP numeric camera model IDs.
       MODELS = {
         0 => "SIMPLE_PINHOLE",
         1 => "PINHOLE",
@@ -35,15 +40,28 @@ module Gsplat
         )
       end
 
+      # Reads and scales camera calibration records from a bin/txt file.
+      #
+      # @param path [String]
+      # @param data_factor [Numeric] image downsampling factor
+      # @return [Hash{Integer=>Camera}]
       def read_cameras(path, data_factor: 1)
         validate_factor!(data_factor)
         raw_records(path, :cameras).transform_values { |record| camera_record(record, data_factor) }
       end
 
+      # Reads registered image poses from a bin/txt file.
+      #
+      # @param path [String]
+      # @return [Hash{Integer=>ImageRecord}]
       def read_images(path)
         raw_records(path, :images).transform_values { |record| image_record(record) }
       end
 
+      # Reads sparse points from a bin/txt file.
+      #
+      # @param path [String]
+      # @return [Hash{Integer=>Point3D}]
       def read_points3d(path)
         raw_records(path, :points3d).transform_values do |record|
           Point3D.new(

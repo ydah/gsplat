@@ -17,6 +17,10 @@ module Gsplat
         @initial_rates = optimizer.groups.transform_values(&:lr)
       end
 
+      # Advances or sets the schedule and updates every optimizer group.
+      #
+      # @param step [Integer, nil] absolute step, or nil to advance once
+      # @return [Numeric, Hash{Symbol=>Numeric}] updated learning rates
       def step(step = nil)
         @step_count = step || (step_count + 1)
         progress = [step_count.to_f / max_steps, 1.0].min

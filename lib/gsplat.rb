@@ -54,8 +54,13 @@ require_relative "gsplat/native_ops"
 
 # Differentiable 3D Gaussian splatting for Ruby.
 module Gsplat
+  # Base error for invalid runtime state and malformed serialized data.
   class Error < StandardError; end
+
+  # Error raised when tensor dimensions do not satisfy an API contract.
   class ShapeError < Error; end
+
+  # Error raised when a requested model, format, or backend is unavailable.
   class NotSupportedError < Error; end
 
   class << self

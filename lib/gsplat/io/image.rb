@@ -6,6 +6,7 @@ module Gsplat
   module IO
     # RGB image input/output with vips-first optional backends.
     module Image
+      # Optional image backend implementations in preference order.
       BACKENDS = {
         vips: VipsImageBackend,
         chunky_png: ChunkyPngImageBackend
@@ -24,6 +25,9 @@ module Gsplat
         resolve_backend(backend).write(path, array)
       end
 
+      # Returns image codecs currently loadable in this process.
+      #
+      # @return [Array<Symbol>] subset of `:vips` and `:chunky_png`
       def available_backends
         BACKENDS.filter_map { |name, implementation| name if implementation.available? }
       end

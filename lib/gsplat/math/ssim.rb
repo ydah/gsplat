@@ -4,6 +4,7 @@ module Gsplat
   module Math
     # SSIM forward and analytic VJP with a grouped Gaussian convolution.
     module Ssim
+      # Intermediate tensors retained by {.backward}.
       Cache = Data.define(
         :image_a, :image_b, :mu_a, :mu_b, :ssim_map,
         :numerator_mean, :numerator_variance,

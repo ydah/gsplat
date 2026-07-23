@@ -5,6 +5,7 @@ module Gsplat
   module Ops
     # Closed-form opacity and scale update from 3DGS-MCMC equation 9.
     module Relocation
+      # Default maximum split ratio represented by {.binomial_table}.
       DEFAULT_N_MAX = 51
 
       module_function

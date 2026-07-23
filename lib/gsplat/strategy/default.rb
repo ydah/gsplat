@@ -4,6 +4,7 @@ module Gsplat
   module Strategy
     # Original 3DGS densification strategy with gsplat refinements.
     class Default < Base
+      # Upstream-compatible densification defaults.
       DEFAULTS = {
         prune_opa: 0.005,
         grow_grad2d: 0.0002,
@@ -22,7 +23,11 @@ module Gsplat
         key_for_gradient: :means2d
       }.freeze
 
-      attr_reader(*DEFAULTS.keys)
+      attr_reader :absgrad, :grow_grad2d, :grow_scale2d, :grow_scale3d,
+                  :key_for_gradient, :pause_refine_after_reset, :prune_opa,
+                  :prune_scale2d, :prune_scale3d, :refine_every,
+                  :refine_scale2d_stop_iter, :refine_start_iter,
+                  :refine_stop_iter, :reset_every, :revised_opacity
 
       def initialize(**options)
         super()
@@ -33,6 +38,10 @@ module Gsplat
         validate_options!
       end
 
+      # Creates mutable gradient/radius statistics for a scene.
+      #
+      # @param scene_scale [Numeric]
+      # @return [Hash]
       def initialize_state(scene_scale:)
         super.merge(grad2d: nil, count: nil, radii: nil)
       end

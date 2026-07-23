@@ -3,6 +3,7 @@
 module Gsplat
   # Operation registry and runtime backend selector.
   module Backend
+    # Backend names accepted by {Gsplat.backend=}.
     VALID_BACKENDS = %i[auto ruby native].freeze
 
     @registry = Hash.new { |operations, name| operations[name] = {} }
@@ -29,8 +30,6 @@ module Gsplat
       # Dispatches an operation to the selected implementation.
       #
       # @param op_name [Symbol, String] operation identifier
-      # @param args [Array<Object>] positional arguments
-      # @param kwargs [Hash] keyword arguments
       # @return [Object] operation result
       def dispatch(op_name, ...)
         operation = op_name.to_sym

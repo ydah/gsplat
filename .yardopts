@@ -1,0 +1,12 @@
+--markup markdown
+--readme README.md
+--no-private
+--hide-api private
+--exclude "lib/gsplat/backend/ruby/.*"
+--exclude "lib/gsplat/native(_ops|_raster_ops)?\\.rb"
+--exclude "lib/gsplat/ops/tensor_.*\\.rb"
+--exclude "lib/gsplat/rasterization_(helpers|validation)\\.rb"
+--exclude "lib/gsplat/io/(colmap_binary|colmap_text|image_backends|ply_reader|zip_archive)\\.rb"
+--exclude "lib/gsplat/compression/(grid_sort|kmeans|png_codec|quantizer)\\.rb"
+--exclude "lib/gsplat/math/(camera_distortion|camera_projection|small_matrix_primitives|spherical_harmonic_basis)\\.rb"
+--exclude "ext/.*"

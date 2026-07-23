@@ -7,6 +7,8 @@ module Gsplat
       # Mean absolute error with a zero subgradient at exact equality.
       class L1 < Autograd::Function
         class << self
+          # Evaluates mean absolute error.
+          # @api private
           def forward(context, prediction, target)
             unless prediction.shape == target.shape
               raise ShapeError, "L1 shapes differ: #{prediction.shape.inspect} and #{target.shape.inspect}"
@@ -17,6 +19,8 @@ module Gsplat
             prediction.class.cast(difference.abs.mean)
           end
 
+          # Propagates the L1 subgradient to prediction and target.
+          # @api private
           def backward(context, grad_output)
             difference, count = context.saved_values
             signs = difference.class.zeros(*difference.shape)
@@ -31,12 +35,16 @@ module Gsplat
       # Structural similarity with the standard 11x11, sigma 1.5 window.
       class StructuralSimilarity < Autograd::Function
         class << self
+          # Evaluates mean SSIM and stores convolution intermediates.
+          # @api private
           def forward(context, image_a, image_b, layout:)
             score, cache = Math::Ssim.forward(image_a, image_b, layout: layout)
             context.save(cache)
             image_a.class.cast(score)
           end
 
+          # Propagates the SSIM score gradient.
+          # @api private
           def backward(context, grad_output)
             Math::Ssim.backward(context.saved_values.first, grad_output)
           end
@@ -46,6 +54,8 @@ module Gsplat
       # Weighted L1 plus (1 - SSIM) reconstruction objective.
       class Reconstruction < Autograd::Function
         class << self
+          # Evaluates weighted L1 and SSIM reconstruction loss.
+          # @api private
           def forward(context, prediction, target, ssim_lambda:, layout:)
             unless prediction.shape == target.shape
               raise ShapeError, "reconstruction shapes differ: #{prediction.shape.inspect} and #{target.shape.inspect}"
@@ -57,6 +67,8 @@ module Gsplat
             prediction.class.cast(((1 - ssim_lambda) * difference.abs.mean.to_f) + (ssim_lambda * (1 - score)))
           end
 
+          # Propagates the combined reconstruction gradient.
+          # @api private
           def backward(context, grad_output)
             difference, count, ssim_cache, ssim_lambda = context.saved_values
             signs = difference.class.zeros(*difference.shape)

@@ -14,10 +14,14 @@ module Gsplat
         @outputs = []
       end
 
+      # Delegates output gradients to the operation's backward method.
+      # @api private
       def backward(*grad_outputs)
         function.backward(context, *grad_outputs)
       end
 
+      # Releases graph references after a backward traversal.
+      # @api private
       def release
         outputs.each { |output| output.clear_creator(self) }
         context.clear
@@ -32,7 +36,6 @@ module Gsplat
         # Executes forward and records a graph node when any input needs a gradient.
         #
         # @param inputs [Array<Object, Variable>]
-        # @param kwargs [Hash]
         # @return [Variable, Array<Variable>]
         def apply(*inputs, **)
           needs_input_grad = inputs.map { |input| input.is_a?(Variable) && input.requires_grad? }

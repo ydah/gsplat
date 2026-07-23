@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Gsplat
+  # Dataset containers, losses, fitting utilities, and training loops.
   module Training
     # In-memory multi-view training scene.
     class Scene
@@ -22,6 +23,11 @@ module Gsplat
         @scene_scale = scene_scale || infer_scene_scale
       end
 
+      # Loads a COLMAP sparse model and its corresponding RGB images.
+      #
+      # @param path [String] dataset root containing `sparse` and `images`
+      # @param data_factor [Numeric] image/intrinsics downsampling factor
+      # @return [Scene]
       def self.from_colmap(path, data_factor: 1)
         dataset = IO::Colmap.read(path, data_factor: data_factor)
         records = dataset.images.values.sort_by(&:name)
@@ -40,6 +46,9 @@ module Gsplat
         )
       end
 
+      # Number of registered training views.
+      #
+      # @return [Integer]
       def camera_count
         images.shape[0]
       end

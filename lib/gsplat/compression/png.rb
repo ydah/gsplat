@@ -9,9 +9,11 @@ require_relative "png_codec"
 require_relative "quantizer"
 
 module Gsplat
+  # Parameter codecs for compact Gaussian model storage.
   module Compression
     # Self-contained PNG and K-means Gaussian parameter compression.
     class Png
+      # Parameter names encoded as 8-bit PNG images.
       PNG8_PARAMETERS = %w[scales quats opacities sh0].freeze
 
       attr_reader :use_sort, :kmeans_clusters, :kmeans_iterations, :sh_quantization
@@ -24,6 +26,11 @@ module Gsplat
         validate_options!
       end
 
+      # Compresses Gaussian arrays into an upstream-compatible directory.
+      #
+      # @param directory [String] output directory
+      # @param parameters [Hash{String, Symbol=>Numo::NArray}] arrays with a shared first dimension
+      # @return [String] the output directory
       def compress(directory, parameters)
         FileUtils.mkdir_p(directory)
         values, side = GridSort.prepare(parameters, use_sort: use_sort)
@@ -37,6 +44,10 @@ module Gsplat
         directory
       end
 
+      # Restores Gaussian arrays from a compressed directory.
+      #
+      # @param directory [String] directory produced by {#compress}
+      # @return [Hash{Symbol=>Numo::NArray}]
       def decompress(directory)
         metadata = JSON.parse(File.read(File.join(directory, "meta.json")))
         values = metadata.to_h do |name, entry|

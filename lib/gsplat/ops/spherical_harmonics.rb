@@ -8,6 +8,8 @@ module Gsplat
     # Evaluates real SH bases through degree four.
     class SphericalHarmonics < Autograd::Function
       class << self
+        # Evaluates SH and stores inputs for its analytic VJP.
+        # @api private
         def forward(context, degree, directions, coefficients, masks: nil)
           context.save(degree, directions, coefficients, masks)
           Backend.dispatch(
@@ -19,6 +21,8 @@ module Gsplat
           )
         end
 
+        # Propagates an SH value gradient to directions and coefficients.
+        # @api private
         def backward(context, grad_output)
           degree, directions, coefficients, masks = context.saved_values
           grad_directions, grad_coefficients = Backend.dispatch(

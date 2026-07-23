@@ -6,7 +6,9 @@ module Gsplat
   module Training
     # End-to-end multi-view Gaussian training loop.
     class Trainer
+      # Final step, before/after metrics, and periodic history.
       Result = Data.define(:step, :initial_metrics, :final_metrics, :history)
+      # Mapping from parameter names to {Config} learning-rate attributes.
       LEARNING_RATES = {
         means: :means_lr,
         scales: :scales_lr,
@@ -42,6 +44,10 @@ module Gsplat
         @step = 0
       end
 
+      # Optimizes until the configured maximum or for an additional step count.
+      #
+      # @param steps [Integer, nil]
+      # @return [Result]
       def train(steps: nil)
         target_step = steps ? step + steps : config.max_steps
         initial_metrics = evaluate
@@ -61,6 +67,9 @@ module Gsplat
         )
       end
 
+      # Renders every view without graph recording and reports PSNR/SSIM.
+      #
+      # @return [Hash{Symbol=>Float}]
       def evaluate
         Autograd.no_grad do
           rendered, = render((0...scene.camera_count).to_a, sh_degree_for(step))
@@ -72,6 +81,10 @@ module Gsplat
         end
       end
 
+      # Saves current parameters, optimizer moments, step, and config.
+      #
+      # @param path [String, nil] generated from `config.output_dir` when nil
+      # @return [String] written path
       def save_checkpoint!(path = nil)
         path ||= File.join(config.output_dir, "checkpoints", format("step_%06d.npz", step))
         FileUtils.mkdir_p(File.dirname(path))
@@ -85,6 +98,10 @@ module Gsplat
         path
       end
 
+      # Restores parameters, optimizer moments, step, and scheduler position.
+      #
+      # @param source [String, #read]
+      # @return [IO::Checkpoint::Snapshot]
       def load_checkpoint!(source)
         snapshot = IO::Checkpoint.restore!(source, params: params, optimizers: optimizers)
         @step = snapshot.step

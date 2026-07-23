@@ -116,6 +116,13 @@ module Gsplat
   end
 
   class << self
+    # Renders a dense batch of cameras with differentiable 3D Gaussians.
+    #
+    # Geometry uses float32/float64 arrays `means [N,3]`, `quats [N,4]`,
+    # `scales [N,3]`; colors are `[N,D]` or SH `[N,K,D]`, views are
+    # `[C,4,4]`, and intrinsics are `[C,3,3]`. Activated opacities are `[N]`.
+    #
+    # @return [Array] rendered colors `[C,H,W,X]`, alphas `[C,H,W,1]`, and metadata Hash
     def rasterization(**)
       Rasterization.render(**)
     end

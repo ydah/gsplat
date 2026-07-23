@@ -11,14 +11,19 @@ options = {
   steps: 300,
   learning_rate: 20.0
 }
-OptionParser.new do |parser|
-  parser.banner = "Usage: bundle exec ruby examples/fit_image.rb [options]"
-  parser.on("--width N", Integer) { |value| options[:width] = value }
-  parser.on("--height N", Integer) { |value| options[:height] = value }
-  parser.on("--gaussians N", Integer) { |value| options[:n_gaussians] = value }
-  parser.on("--steps N", Integer) { |value| options[:steps] = value }
-  parser.on("--learning-rate X", Float) { |value| options[:learning_rate] = value }
-end.parse!
+parser = OptionParser.new do |options_parser|
+  options_parser.banner = "Usage: bundle exec ruby examples/fit_image.rb [options]"
+  options_parser.on("--width N", Integer) { |value| options[:width] = value }
+  options_parser.on("--height N", Integer) { |value| options[:height] = value }
+  options_parser.on("--gaussians N", Integer) { |value| options[:n_gaussians] = value }
+  options_parser.on("--steps N", Integer) { |value| options[:steps] = value }
+  options_parser.on("--learning-rate X", Float) { |value| options[:learning_rate] = value }
+  options_parser.on_tail("-h", "--help", "Show this help") do
+    puts options_parser
+    exit
+  end
+end
+parser.parse!
 
 steps = options.delete(:steps)
 result = Gsplat::Training::ImageFitter.new(**options).fit(steps: steps)

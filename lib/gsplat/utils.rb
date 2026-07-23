@@ -3,6 +3,7 @@
 module Gsplat
   # Point-cloud initialization and scene geometry utilities.
   module Utils
+    # Degree-zero real spherical-harmonic basis constant.
     SH_C0 = 0.28209479177387814
 
     module_function
@@ -28,6 +29,10 @@ module Gsplat
       (rgb - 0.5) / SH_C0
     end
 
+    # Converts degree-zero SH coefficients back to RGB values.
+    #
+    # @param coefficients [Numo::NArray] [...,3]
+    # @return [Numo::NArray] [...,3]
     def sh_to_rgb(coefficients)
       (coefficients * SH_C0) + 0.5
     end

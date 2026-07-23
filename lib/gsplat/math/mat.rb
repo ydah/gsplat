@@ -3,6 +3,7 @@
 require_relative "small_matrix_primitives"
 
 module Gsplat
+  # Quaternion, projection, image metric, and small-matrix primitives.
   module Math
     # Closed-form batched operations for small matrices.
     module Mat

@@ -11,6 +11,8 @@ module Gsplat
     # Fused world-to-camera transform, covariance projection, and culling.
     class FullyFusedProjection < Autograd::Function
       class << self
+        # Adds the optional compensation placeholder used by the public tuple.
+        # @api private
         def apply(*inputs, calc_compensations: false, **options)
           outputs = super
           calc_compensations ? outputs : [*outputs, nil]
@@ -62,18 +64,44 @@ module Gsplat
   end
 
   class << self
+    # Transforms world-space means/covariances into camera space.
+    #
+    # @param means [Numo::NArray] [N,3]
+    # @param covars [Numo::NArray] [N,3,3] or packed [N,6]
+    # @param viewmats [Numo::NArray] [C,4,4] world-to-camera transforms
+    # @return [Array<Numo::NArray>] camera means `[C,N,3]` and covariances `[C,N,3,3]`
     def world_to_cam(means, covars, viewmats)
       Math::CameraProjection.world_to_cam(means, covars, viewmats)
     end
 
+    # Projects camera-space means/covariances with a pinhole model.
+    #
+    # @param means [Numo::NArray] [C,N,3]
+    # @param covars [Numo::NArray] [C,N,3,3]
+    # @param intrinsics [Numo::NArray] [C,3,3]
+    # @return [Array<Numo::NArray>] projected means `[C,N,2]` and covariances `[C,N,2,2]`
     def persp_proj(means, covars, intrinsics, width, height)
       Math::CameraProjection.persp_proj(means, covars, intrinsics, width, height)
     end
 
+    # Projects camera-space means/covariances with an orthographic model.
+    #
+    # @param means [Numo::NArray] [C,N,3]
+    # @param covars [Numo::NArray] [C,N,3,3]
+    # @param intrinsics [Numo::NArray] [C,3,3]
+    # @return [Array<Numo::NArray>] projected means `[C,N,2]` and covariances `[C,N,2,2]`
     def ortho_proj(means, covars, intrinsics, width, height)
       Math::CameraProjection.ortho_proj(means, covars, intrinsics, width, height)
     end
 
+    # Projects and culls a dense camera batch.
+    #
+    # Inputs use float32/float64 Numo arrays or {Autograd::Variable}; geometry is
+    # `[N,3]`, views `[C,4,4]`, intrinsics `[C,3,3]`, and outputs are
+    # radii `[C,N,2]`, means `[C,N,2]`, depths `[C,N]`, conics `[C,N,3]`,
+    # plus optional compensations `[C,N]`.
+    #
+    # @return [Array<(Numo::NArray, Autograd::Variable, nil)>]
     # rubocop:disable Metrics/ParameterLists, Naming/MethodParameterName
     def fully_fused_projection(means, viewmats:, ks:, width:, height:, covars: nil, quats: nil, scales: nil,
                                eps2d: 0.3, near_plane: 0.01, far_plane: 1e10, radius_clip: 0.0,

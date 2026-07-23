@@ -25,6 +25,8 @@ module Gsplat
           [nil, outputs]
         end
 
+        # Evaluates covariance/precision tensors and records inputs for VJP.
+        # @api private
         def forward(context, quaternions, scales, **options)
           compute_covar = options.fetch(:compute_covar)
           compute_preci = options.fetch(:compute_preci)
@@ -43,6 +45,8 @@ module Gsplat
           compute_covar ? covariance : precision
         end
 
+        # Propagates matrix gradients to quaternions and scales.
+        # @api private
         def backward(context, *grad_outputs)
           quaternions, scales, compute_covar, compute_preci, triu = context.saved_values
           grad_covar = compute_covar ? grad_outputs.shift : nil

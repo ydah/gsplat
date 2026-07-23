@@ -4,17 +4,22 @@ module Gsplat
   module Training
     # A small self-consistency image fitting loop used by examples and E2E tests.
     class ImageFitter
+      # Image-fit metrics, optimized colors, and target image.
       Result = Data.define(:initial_psnr, :final_psnr, :history, :colors, :target)
 
       # Scalar image MSE used to drive the example's reverse pass.
       class MeanSquaredError < Autograd::Function
         class << self
+          # Evaluates scalar mean squared error.
+          # @api private
           def forward(context, rendered, target)
             difference = rendered - target
             context.save(difference, rendered.size)
             rendered.class.cast((difference**2).sum / rendered.size)
           end
 
+          # Returns the rendered-image VJP; targets are constants.
+          # @api private
           def backward(context, grad_output)
             difference, count = context.saved_values
             [(2.0 * difference / count) * grad_output.to_f, nil]

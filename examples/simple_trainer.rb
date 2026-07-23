@@ -10,17 +10,35 @@ options = {
   output_dir: "results",
   max_steps: 30_000,
   data_factor: 1,
-  strategy: "default"
+  strategy: "default",
+  dry_run: false
 }
-OptionParser.new do |parser|
-  parser.banner = "Usage: bundle exec ruby examples/simple_trainer.rb --data PATH [options]"
-  parser.on("--data PATH", "COLMAP dataset root") { |value| options[:data] = value }
-  parser.on("--output PATH") { |value| options[:output_dir] = value }
-  parser.on("--steps N", Integer) { |value| options[:max_steps] = value }
-  parser.on("--data-factor N", Integer) { |value| options[:data_factor] = value }
-  parser.on("--strategy NAME", %w[default mcmc]) { |value| options[:strategy] = value }
-end.parse!
+parser = OptionParser.new do |options_parser|
+  options_parser.banner = "Usage: bundle exec ruby examples/simple_trainer.rb --data PATH [options]"
+  options_parser.on("--data PATH", "COLMAP dataset root") { |value| options[:data] = value }
+  options_parser.on("--output PATH") { |value| options[:output_dir] = value }
+  options_parser.on("--steps N", Integer) { |value| options[:max_steps] = value }
+  options_parser.on("--data-factor N", Integer) { |value| options[:data_factor] = value }
+  options_parser.on("--strategy NAME", %w[default mcmc]) { |value| options[:strategy] = value }
+  options_parser.on("--dry-run", "Validate the sparse model without loading images") { options[:dry_run] = true }
+  options_parser.on_tail("-h", "--help", "Show this help") do
+    puts options_parser
+    exit
+  end
+end
+parser.parse!
 abort "error: --data is required" unless options[:data]
+
+if options.fetch(:dry_run)
+  dataset = Gsplat::IO::Colmap.read(options.fetch(:data), data_factor: options.fetch(:data_factor))
+  warn format(
+    "dataset valid: cameras=%<cameras>d images=%<images>d points=%<points>d",
+    cameras: dataset.cameras.length,
+    images: dataset.images.length,
+    points: dataset.points3d.length
+  )
+  exit
+end
 
 scene = Gsplat::Training::Scene.from_colmap(
   options.fetch(:data),

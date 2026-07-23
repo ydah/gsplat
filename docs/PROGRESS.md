@@ -10,6 +10,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P0-4 | Complete (alternate DoD) | 2026-07-23 | 34-case generator and dependency-free dry run; CUDA goldens pending CUDA host |
 | P0-5 | Complete | 2026-07-23 | allclose/golden/backend test helpers and Ruby 3.2–4.0 CI matrix |
 | P1-1 | Complete | 2026-07-23 | Autograd Variable/Function/Context, branching, multi-output, no_grad, graph release |
+| P1-2 | Complete | 2026-07-23 | Batched quaternion VJPs and closed-form 2x2/3x3 matrix operations |
 
 ## Phase gates
 

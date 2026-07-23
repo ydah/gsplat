@@ -27,6 +27,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P8-2 | Complete | 2026-07-23 | Strategy lifecycle and synchronized duplicate/split/remove/reset operations |
 | P8-3 | Complete (golden pending) | 2026-07-23 | Default densification statistics, growth, pruning and opacity reset |
 | P8-4 | Complete (golden pending) | 2026-07-23 | Closed-form relocation, weighted sampling, covariance noise and MCMC strategy |
+| P9-1 | Complete | 2026-07-23 | Inria PLY writer and arbitrary-order ASCII/binary little-endian reader |
 
 ## Phase gates
 

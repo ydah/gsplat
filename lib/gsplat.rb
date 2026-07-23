@@ -32,6 +32,7 @@ require_relative "gsplat/strategy/ops"
 require_relative "gsplat/strategy/mcmc_ops"
 require_relative "gsplat/strategy/default"
 require_relative "gsplat/strategy/mcmc"
+require_relative "gsplat/io/colmap"
 require_relative "gsplat/io/npy"
 require_relative "gsplat/io/ply"
 

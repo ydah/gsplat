@@ -23,6 +23,14 @@ gs_require_sfloat(VALUE value, const char *name)
 }
 
 static inline void
+gs_require_int32(VALUE value, const char *name)
+{
+    if (!rb_obj_is_kind_of(value, numo_cInt32)) {
+        rb_raise(rb_eTypeError, "%s must be Numo::Int32", name);
+    }
+}
+
+static inline void
 gs_require_same_shape(VALUE left, VALUE right)
 {
     narray_t *left_array = gs_narray(left);
@@ -40,5 +48,7 @@ gs_require_same_shape(VALUE left, VALUE right)
 
 #define GS_SFLOAT_READ(value) ((const float *)na_get_pointer_for_read(value))
 #define GS_SFLOAT_WRITE(value) ((float *)na_get_pointer_for_write(value))
+#define GS_INT32_READ(value) ((const int32_t *)na_get_pointer_for_read(value))
+#define GS_INT32_WRITE(value) ((int32_t *)na_get_pointer_for_write(value))
 
 #endif

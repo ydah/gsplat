@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "native_raster_ops"
+
 # Native operation registration and validated Ruby fallbacks.
 module Gsplat
   # Ruby-facing validation and fallback wrappers for native operations.
@@ -120,6 +122,16 @@ module Gsplat
       :isect_offset_encode,
       :native,
       NativeOps.method(:isect_offset_encode)
+    )
+    Backend.register(
+      :rasterize_to_pixels_forward,
+      :native,
+      NativeRasterOps.method(:forward)
+    )
+    Backend.register(
+      :rasterize_to_pixels_backward,
+      :native,
+      NativeRasterOps.method(:backward)
     )
   end
 end

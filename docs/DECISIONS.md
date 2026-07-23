@@ -23,3 +23,6 @@ Record only decisions that differ from, clarify, or resolve ambiguity in the des
   implementation. The `:native` backend remains functionally complete while avoiding a second,
   divergent copy of derivative formulas.
 - Performance reports label these paths as hybrid and measure each accelerated operation explicitly.
+- Raster backward uses OpenMP atomic scatter-add instead of per-worker full gradient buffers. The
+  100k/800×800 benchmark scales from 279.790 ms at one thread to 79.252 ms at eight threads while
+  avoiding `O(workers × N × channels)` temporary memory.

@@ -54,7 +54,45 @@ class NativeOpsTest < Minitest::Test
     assert_equal expected_offsets.to_a, actual_offsets.to_a
   end
 
+  def test_raster_forward_and_backward_match_ruby_backend
+    inputs = raster_inputs
+    expected = Gsplat::Backend::RubyRasterizeToPixels.forward(*inputs)
+    actual = Gsplat::NativeRasterOps.forward(*inputs)
+    expected.first(2).zip(actual.first(2)).each do |ruby_output, native_output|
+      assert_allclose native_output, ruby_output, atol: 2e-6, rtol: 2e-5
+    end
+    assert_equal expected[2].to_a, actual[2].to_a
+
+    color_grad = Numo::SFloat.new(*actual[0].shape).rand(-0.5, 0.5)
+    alpha_grad = Numo::SFloat.new(*actual[1].shape).rand(-0.5, 0.5)
+    backward_args = [*inputs, expected[1], expected[2], color_grad, alpha_grad]
+    expected_gradients = Gsplat::Backend::RubyRasterizeToPixelsBackward.backward(
+      *backward_args, absgrad: true
+    )
+    actual_gradients = Gsplat::NativeRasterOps.backward(*backward_args, absgrad: true)
+    expected_gradients.flatten.zip(actual_gradients.flatten).each do |ruby_output, native_output|
+      assert_allclose native_output, ruby_output, atol: 3e-5, rtol: 3e-5
+    end
+  end
+
   private
+
+  def raster_inputs
+    means = Numo::SFloat[[[1.2, 1.1], [3.6, 2.8], [5.1, 3.9]]]
+    conics = Numo::SFloat[
+      [[0.3, 0.02, 0.25], [0.2, -0.01, 0.28], [0.35, 0.015, 0.22]]
+    ]
+    colors = Numo::SFloat[[[0.2, 0.7, 0.1, 0.4], [0.8, 0.1, 0.5, 0.2], [0.4, 0.5, 0.9, 0.3]]]
+    opacities = Numo::SFloat[[0.55, 0.45, 0.35]]
+    _, keys, ids = Gsplat::Backend::RubyIsectTiles.forward(
+      means, Numo::SFloat[[20, 20, 20]], Numo::SFloat[[1, 2, 3]], 4, 2, 2, sort: true
+    )
+    offsets = Gsplat::Backend::RubyIsectTiles.offset_encode(keys, 1, 2, 2)
+    [
+      means, conics, colors, opacities, Numo::SFloat[[0.1, 0.2, 0.3, 0.4]],
+      Numo::Bit[[[1, 0], [1, 1]]], 7, 5, 4, offsets, ids
+    ]
+  end
 
   def project(camera_model)
     rng = Random.new(17)

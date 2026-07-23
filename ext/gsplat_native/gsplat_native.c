@@ -10,6 +10,7 @@ typedef struct {
 void gs_init_spherical_harmonics(VALUE native);
 void gs_init_projection(VALUE native);
 void gs_init_intersections(VALUE native);
+void gs_init_rasterization(VALUE native);
 
 static void *
 gs_add_without_gvl(void *opaque)
@@ -55,4 +56,5 @@ Init_gsplat_native(void)
     gs_init_spherical_harmonics(native);
     gs_init_projection(native);
     gs_init_intersections(native);
+    gs_init_rasterization(native);
 }

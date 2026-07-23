@@ -38,7 +38,8 @@ module Gsplat
 
           transmittance_before = current_transmittance.dup
           transmittance_before[valid] = current_transmittance[valid] / (1 - alpha[valid])
-          visibility = transmittance_before * alpha
+          visibility = means2d.class.zeros(pixel_count)
+          visibility[valid] = (transmittance_before * alpha)[valid]
           color = colors[gaussian_index, true]
           grad_colors[gaussian_index, true] += (
             grad_render_colors * visibility.reshape(pixel_count, 1)

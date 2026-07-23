@@ -35,6 +35,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P10-1 | Complete | 2026-07-23 | Optional C extension, Numo bridge, GVL release and build fallback |
 | P10-2 | Complete (hybrid) | 2026-07-23 | C float32 projection/SH forward; analytic backward and float64 fallback |
 | P10-3 | Complete | 2026-07-23 | C tile enumeration, stable 64-bit radix sort and offset encoding |
+| P10-4 | Complete | 2026-07-23 | GVL-free OpenMP raster forward/backward with atomic scatter-add |
 
 ## Phase gates
 
@@ -128,4 +129,15 @@ This file is the restart point for implementation sessions. Read it after `READM
 - The stable eight-pass radix sort preserves key/id pairing and runs without the Ruby GVL.
 - The 1,000-Gaussian profile improves from 2.505 ms to 0.045 ms (55.7×).
 - Full suite: 136 tests, 836 assertions, no failures, 14 documented skips.
+- RuboCop: no offenses.
+
+### P10 — Complete
+
+- Contiguous float32 projection, SH, intersections, raster forward and raster backward use C kernels.
+- Raster forward owns disjoint tiles; backward uses bounded-memory atomic scatter-add and supports
+  arbitrary channels, backgrounds, masks and absolute mean gradients.
+- At 100k Gaussians and 800×800, 8-thread forward is 29.643 ms and combined forward/backward is
+  108.895 ms, within the 150/400 ms design targets.
+- The explicit `:native` suite passes with one and eight OpenMP threads.
+- Full suite: 137 tests, 845 assertions, no failures, 14 documented skips.
 - RuboCop: no offenses.

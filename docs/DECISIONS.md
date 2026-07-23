@@ -56,3 +56,13 @@ Record only decisions that differ from, clarify, or resolve ambiguity in the des
 - This keeps color/alpha and Trainer optimization differentiable on both backends. Exact upstream
   ray-splat transforms, median crossing, and distortion accumulation remain covered by the pending
   CUDA golden gate rather than being represented as numerically identical on this CPU-only host.
+
+### 2026-07-24: Eval3d remains a portable reference path (P11-9)
+
+- `with_eval3d` generalizes the P11-6 world-space evaluator from hit distance to arbitrary color
+  features. `return_normals` accumulates the quaternion's canonical +Z axis after flipping it toward
+  the ray, using the same alpha weights as color.
+- Pinhole cameras and classic rasterization are supported. Both backend selections share this Ruby
+  evaluator and its numerical geometry VJP; the performance-oriented 2D raster kernels are unchanged.
+- The analytic single-ray case covers values and quaternion gradients locally. Full CUDA parity for
+  color, alpha, and normals remains a generated golden-data gate.

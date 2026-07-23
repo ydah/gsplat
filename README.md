@@ -19,6 +19,7 @@ The implementation follows the project design in
 - Arbitrary feature dimensions with configurable `channel_chunk`
 - Pinhole, orthographic and equidistant fisheye cameras with OpenCV distortion
 - 2D Gaussian surfel rendering with normal, distortion and median-depth outputs
+- World-space Gaussian evaluation with differentiable accumulated normals
 - Direct covariance or quaternion/scale geometry
 - RGB, z/Euclidean depth, per-ray hit distance, expected-depth and combined render modes
 - Classic and antialiased rasterization with `radius_clip`

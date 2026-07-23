@@ -25,7 +25,8 @@ Rasterization, end-to-end rendering, AbsGrad, and MCMC relocation use upstream C
 recorded as skipped in `test/golden/manifest.json`.
 
 The Euclidean-order and single-ray hit-distance fixtures are analytic CPU cases. Their equations
-mirror current upstream eval3d semantics while keeping the primary package pin at 1.5.3.
+mirror current upstream eval3d semantics while keeping the primary package pin at 1.5.3. The full
+world-space color/alpha/normal fixture requires CUDA.
 
 ## Complete CUDA generation
 

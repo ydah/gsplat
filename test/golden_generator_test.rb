@@ -12,7 +12,7 @@ class GoldenGeneratorTest < Minitest::Test
     )
 
     assert_predicate status, :success?, error
-    %w[quat sh proj isect raster render strategy relocation ssim].each do |family|
+    %w[quat sh proj isect raster render eval3d strategy relocation ssim].each do |family|
       assert_match(/#{family}_/, output)
     end
   end

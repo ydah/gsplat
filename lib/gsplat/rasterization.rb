@@ -12,7 +12,8 @@ module Gsplat
                sh_degree: nil, tile_size: 16, backgrounds: nil, render_mode: "RGB",
                rasterize_mode: "classic", camera_model: "pinhole", absgrad: false,
                channel_chunk: 32, packed: false, global_z_order: true,
-               radial_coeffs: nil, tangential_coeffs: nil, thin_prism_coeffs: nil)
+               radial_coeffs: nil, tangential_coeffs: nil, thin_prism_coeffs: nil,
+               with_eval3d: false, return_normals: false)
       # rubocop:enable Metrics/ParameterLists, Naming/MethodParameterName
       RasterizationValidation.validate_options!(
         render_mode, rasterize_mode, sh_degree, tile_size, channel_chunk, width, height
@@ -20,6 +21,9 @@ module Gsplat
       RasterizationValidation.warn_unsupported_options(packed, global_z_order)
       RasterizationValidation.validate_scene!(
         means, quats, scales, covars, opacities, colors, viewmats, ks, sh_degree
+      )
+      RasterizationValidation.validate_eval3d!(
+        with_eval3d, return_normals, covars, rasterize_mode
       )
       camera_count = Ops::TensorOps.data(viewmats).shape[0]
       calculate_compensations = rasterize_mode == "antialiased"
@@ -70,13 +74,19 @@ module Gsplat
       isect_offsets = Gsplat.isect_offset_encode(
         isect_ids, camera_count, tile_width, tile_height
       )
-      render_colors, render_alphas = if %w[d Ed RGB-d RGB-Ed].include?(render_mode)
-                                       RasterizationHelpers.rasterize_hit_features(
+      hit_distance = %w[d Ed RGB-d RGB-Ed].include?(render_mode)
+      eval3d_normals = nil
+      render_colors, render_alphas = if with_eval3d || hit_distance
+                                       eval3d_outputs = RasterizationHelpers.rasterize_eval3d_features(
                                          means, quats, scales, raster_features, projected_opacities,
                                          viewmats, ks, width, height, tile_size, isect_offsets,
                                          flatten_ids, backgrounds: backgrounds,
-                                                      camera_model: camera_model
+                                                      camera_model: camera_model,
+                                                      use_hit_distance: hit_distance,
+                                                      return_normals: return_normals
                                        )
+                                       eval3d_normals = eval3d_outputs[2] if return_normals
+                                       eval3d_outputs.first(2)
                                      else
                                        RasterizationHelpers.rasterize_features(
                                          means2d, conics, raster_features, projected_opacities,
@@ -98,6 +108,7 @@ module Gsplat
         tiles_per_gauss, isect_ids, flatten_ids, isect_offsets, width, height, tile_size,
         camera_count
       )
+      meta[:normals] = eval3d_normals if return_normals
       means2d.bind_absgrad(meta, :means2d_absgrad) if absgrad && means2d.is_a?(Autograd::Variable)
       [render_colors, render_alphas, meta]
     end

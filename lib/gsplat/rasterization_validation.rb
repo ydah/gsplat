@@ -29,6 +29,14 @@ module Gsplat
       Gsplat.logger.warn("packed mode is unsupported; using dense mode") if packed
     end
 
+    def validate_eval3d!(with_eval3d, return_normals, covars, rasterize_mode)
+      raise ArgumentError, "return_normals requires with_eval3d: true" if return_normals && !with_eval3d
+      raise ArgumentError, "with_eval3d requires quats and scales instead of covars" if with_eval3d && covars
+      return unless with_eval3d && rasterize_mode != "classic"
+
+      raise ArgumentError, "with_eval3d requires rasterize_mode: \"classic\""
+    end
+
     # rubocop:disable Metrics/ParameterLists
     def validate_scene!(means, quats, scales, covars, opacities, colors, viewmats, intrinsics, sh_degree)
       # rubocop:enable Metrics/ParameterLists

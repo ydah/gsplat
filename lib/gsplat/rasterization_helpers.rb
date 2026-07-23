@@ -109,11 +109,11 @@ module Gsplat
     private_class_method :rasterize_feature_chunks
 
     # rubocop:disable Metrics/ParameterLists
-    def rasterize_hit_features(means, quats, scales, features, opacities, viewmats, intrinsics,
-                               width, height, tile_size, offsets, flatten_ids, backgrounds:,
-                               camera_model:)
+    def rasterize_eval3d_features(means, quats, scales, features, opacities, viewmats, intrinsics,
+                                  width, height, tile_size, offsets, flatten_ids, backgrounds:,
+                                  camera_model:, use_hit_distance:, return_normals:)
       # rubocop:enable Metrics/ParameterLists
-      raise ArgumentError, "hit-distance modes require quats and scales" unless quats && scales
+      raise ArgumentError, "world-space rendering requires quats and scales" unless quats && scales
 
       inputs = [means, quats, scales, features, opacities, backgrounds]
       options = {
@@ -124,7 +124,9 @@ module Gsplat
         tile_size: tile_size,
         offsets: offsets,
         flatten_ids: flatten_ids,
-        camera_model: camera_model.to_s
+        camera_model: camera_model.to_s,
+        use_hit_distance: use_hit_distance,
+        return_normals: return_normals
       }
       return Ops::Eval3dRasterize.apply(*inputs, **options) if inputs.any?(Autograd::Variable)
 

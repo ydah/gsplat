@@ -2,7 +2,7 @@
 
 module Gsplat
   module Backend
-    # World-space Gaussian evaluator used by hit-distance rendering.
+    # World-space Gaussian evaluator used by 3DGUT-style rendering.
     module RubyEval3dRasterizer
       ALPHA_CLAMP = 0.99
       ALPHA_SKIP = 1.0 / 255
@@ -12,7 +12,8 @@ module Gsplat
 
       # rubocop:disable Metrics/AbcSize, Metrics/ParameterLists
       def forward(means, quats, scales, colors, opacities, backgrounds, viewmats:, intrinsics:,
-                  width:, height:, tile_size:, offsets:, flatten_ids:, camera_model:)
+                  width:, height:, tile_size:, offsets:, flatten_ids:, camera_model:,
+                  use_hit_distance: false, return_normals: false)
         # rubocop:enable Metrics/AbcSize, Metrics/ParameterLists
         values = validate_inputs(
           means, quats, scales, colors, opacities, backgrounds, viewmats, intrinsics,
@@ -22,6 +23,7 @@ module Gsplat
         camera_count, gaussian_count, channels = colors.shape
         rendered = means.class.zeros(camera_count, height, width, channels)
         alphas = means.class.zeros(camera_count, height, width, 1)
+        rendered_normals = means.class.zeros(camera_count, height, width, 3)
         rotations = Math::Quaternion.to_rotmat(quats)
         camera_count.times do |camera|
           frame = camera_frame(viewmats[camera, true, true])
@@ -31,17 +33,18 @@ module Gsplat
               tile_y = row / tile_size
               range = intersection_range(offsets, flatten_ids, camera, tile_x, tile_y)
               ray = ray_for_pixel(frame, intrinsics[camera, true, true], column, row)
-              pixel, transmittance = composite_pixel(
+              pixel, transmittance, pixel_normal = composite_pixel(
                 means, rotations, scales, colors, opacities, flatten_ids, range,
-                camera, gaussian_count, ray
+                camera, gaussian_count, ray, use_hit_distance, return_normals
               )
               pixel += backgrounds[camera, true] * transmittance if backgrounds
               rendered[camera, row, column, true] = pixel
               alphas[camera, row, column, 0] = 1 - transmittance
+              rendered_normals[camera, row, column, true] = pixel_normal
             end
           end
         end
-        [rendered, alphas]
+        [rendered, alphas, rendered_normals]
       end
 
       # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/ParameterLists, Metrics/PerceivedComplexity
@@ -110,11 +113,12 @@ module Gsplat
       end
       private_class_method :intersection_range
 
-      # rubocop:disable Metrics/ParameterLists
+      # rubocop:disable Metrics/AbcSize, Metrics/ParameterLists
       def composite_pixel(means, rotations, scales, colors, opacities, flatten_ids, range,
-                          camera, gaussian_count, ray)
-        # rubocop:enable Metrics/ParameterLists
+                          camera, gaussian_count, ray, use_hit_distance, return_normals)
+        # rubocop:enable Metrics/AbcSize, Metrics/ParameterLists
         pixel = means.class.zeros(colors.shape[-1])
+        pixel_normal = means.class.zeros(3)
         transmittance = 1.0
         range.each do |intersection|
           flat_id = flatten_ids[intersection].to_i
@@ -133,11 +137,16 @@ module Gsplat
 
           weight = alpha * transmittance
           feature = colors[camera, gaussian, true].dup
-          feature[feature.size - 1] = hit_distance
+          feature[feature.size - 1] = hit_distance if use_hit_distance
           pixel += feature * weight
+          if return_normals
+            normal = rotations[gaussian, true, 2].dup
+            normal *= -1 if (normal * ray[1]).sum.positive?
+            pixel_normal += normal * weight
+          end
           transmittance = next_transmittance
         end
-        [pixel, transmittance]
+        [pixel, transmittance, pixel_normal]
       end
       private_class_method :composite_pixel
 

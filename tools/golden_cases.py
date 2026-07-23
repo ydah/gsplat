@@ -44,6 +44,7 @@ def all_cases() -> list[Case]:
             Case("render_fisheye_distorted", "fisheye_distorted", {}, requires_cuda=True),
             Case("distance_order", "distance_order", {}),
             Case("hit_distance_modes", "hit_distance", {}),
+            Case("render_eval3d_normals", "eval3d", {}, requires_cuda=True),
             Case("raster_2dgs", "raster_2dgs", {}, requires_cuda=True),
             Case("strategy_default_masks", "strategy", {}),
             Case("relocation_mcmc", "relocation", {}, requires_cuda=True),
@@ -111,6 +112,7 @@ def generate(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
         "fisheye_distorted": _fisheye_distorted_case,
         "distance_order": _distance_order_case,
         "hit_distance": _hit_distance_case,
+        "eval3d": _eval3d_case,
         "raster_2dgs": _raster_2dgs_case,
         "render": _render_case,
         "strategy": _strategy_case,
@@ -364,6 +366,28 @@ def _hit_distance_case(_case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
         locals(), "means", "quats", "scales", "opacities", "colors", "render_alphas",
         "render_d", "render_ed", "render_rgb_d", "render_rgb_ed"
     )
+
+
+def _eval3d_case(_case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
+    torch, device = runtime["torch"], runtime["device"]
+    from gsplat import rasterization
+
+    scene = _scene(runtime, 64)
+    colors = torch.rand(64, 3, device=device)
+    render_colors, render_alphas, meta = rasterization(
+        scene["means"], scene["quats"], scene["scales"], scene["opacities"], colors,
+        scene["viewmats"], scene["ks"], scene["width"], scene["height"],
+        packed=False, tile_size=8, with_eval3d=True, return_normals=True
+    )
+    return tensor_payload({
+        **scene,
+        "width": torch.tensor(scene["width"], device=device),
+        "height": torch.tensor(scene["height"], device=device),
+        "colors": colors,
+        "render_colors": render_colors,
+        "render_alphas": render_alphas,
+        "render_normals": meta["normals"],
+    })
 
 
 def _raster_2dgs_case(_case: Case, runtime: dict[str, Any]) -> dict[str, Any]:

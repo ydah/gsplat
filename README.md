@@ -39,3 +39,14 @@ bundle exec rubocop
 ```
 
 The public rendering API and examples will be documented as their implementation phases land.
+
+## Image fitting example
+
+Run the self-consistency image fit with:
+
+```bash
+bundle exec ruby examples/fit_image.rb --gaussians 2000 --steps 300
+```
+
+The example constructs a deterministic smooth target using the same Gaussian geometry, then
+optimizes its colors through the complete differentiable rendering pipeline and reports PSNR.

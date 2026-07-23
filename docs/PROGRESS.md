@@ -22,6 +22,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P6-1 | Complete (golden pending) | 2026-07-23 | Reverse tile scan VJPs and brute-force gradient cross-check |
 | P6-2 | Complete (golden pending) | 2026-07-23 | Optional per-pixel absolute mean-gradient accumulation |
 | P7-1 | Complete (golden pending) | 2026-07-23 | High-level render modes, SH, antialiasing, depth normalization and metadata |
+| P7-2 | Complete | 2026-07-23 | Self-consistency image fitter, 128px fixture and monotonic PSNR E2E |
 
 ## Phase gates
 
@@ -79,4 +80,13 @@ This file is the restart point for implementation sessions. Read it after `READM
 - `absgrad` accumulates absolute per-pixel mean contributions and allocates no buffer when disabled.
 - L3: raster gradients and absolute gradients skip until CUDA golden generation is run.
 - Full suite: 81 tests, 190 assertions, no failures, 9 documented golden-data skips.
+- RuboCop: no offenses.
+
+### P7 — Complete (golden-data gate pending)
+
+- High-level RGB/depth modes, SH, antialiasing, metadata and end-to-end gradients pass.
+- The reduced image-fit E2E improves monotonically from 11.77 dB to 28.89 dB in 12 steps.
+- A 128×128 PPM fixture and a configurable 2,000-Gaussian/300-step example are included.
+- L3 render fixtures remain pending CUDA golden generation.
+- Full suite: 88 tests, 248 assertions, no failures, 9 documented golden-data skips.
 - RuboCop: no offenses.

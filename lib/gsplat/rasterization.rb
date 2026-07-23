@@ -40,7 +40,8 @@ module Gsplat
         camera_model: camera_model,
         radial_coeffs: radial_coeffs,
         tangential_coeffs: tangential_coeffs,
-        thin_prism_coeffs: thin_prism_coeffs
+        thin_prism_coeffs: thin_prism_coeffs,
+        global_z_order: global_z_order
       )
       projected_colors = RasterizationHelpers.prepare_colors(
         means, colors, viewmats, radii, camera_count, sh_degree
@@ -69,21 +70,22 @@ module Gsplat
       isect_offsets = Gsplat.isect_offset_encode(
         isect_ids, camera_count, tile_width, tile_height
       )
-      render_colors, render_alphas = RasterizationHelpers.rasterize_features(
-        means2d,
-        conics,
-        raster_features,
-        projected_opacities,
-        width,
-        height,
-        tile_size,
-        isect_offsets,
-        flatten_ids,
-        backgrounds: backgrounds,
-        channel_chunk: channel_chunk,
-        absgrad: absgrad
-      )
-      if %w[ED RGB+ED].include?(render_mode)
+      render_colors, render_alphas = if %w[d Ed RGB-d RGB-Ed].include?(render_mode)
+                                       RasterizationHelpers.rasterize_hit_features(
+                                         means, quats, scales, raster_features, projected_opacities,
+                                         viewmats, ks, width, height, tile_size, isect_offsets,
+                                         flatten_ids, backgrounds: backgrounds,
+                                                      camera_model: camera_model
+                                       )
+                                     else
+                                       RasterizationHelpers.rasterize_features(
+                                         means2d, conics, raster_features, projected_opacities,
+                                         width, height, tile_size, isect_offsets, flatten_ids,
+                                         backgrounds: backgrounds, channel_chunk: channel_chunk,
+                                         absgrad: absgrad
+                                       )
+                                     end
+      if %w[Ed ED RGB-Ed RGB+ED].include?(render_mode)
         render_colors = Ops::TensorOps.apply(
           Ops::NormalizeDepth,
           render_colors,

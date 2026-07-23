@@ -81,6 +81,30 @@ class ProjectionBackwardTest < Minitest::Test
     assert_allclose covariance_var.grad, numeric_covariance, atol: 2e-6, rtol: 2e-5
   end
 
+  def test_euclidean_depth_backward_matches_float64_central_difference
+    mean_var = Gsplat::Autograd::Variable.new(@means, requires_grad: true)
+    _, means2d, depths, conics, compensations = Gsplat.fully_fused_projection(
+      mean_var,
+      quats: @quaternions,
+      scales: @scales,
+      global_z_order: false,
+      **projection_options
+    )
+    ProjectionLoss.apply(means2d, depths, conics, compensations, weights: @weights).backward
+
+    numeric = central_difference(@means) do |value|
+      _, projected, depth, conic, compensation = Gsplat.fully_fused_projection(
+        value,
+        quats: @quaternions,
+        scales: @scales,
+        global_z_order: false,
+        **projection_options
+      )
+      weighted_outputs(projected, depth, conic, compensation)
+    end
+    assert_allclose mean_var.grad, numeric, atol: 2e-6, rtol: 2e-5
+  end
+
   def test_matches_python_projection_gradients
     fixture = golden("proj_pinhole_c1_n1000")
     mean_var = Gsplat::Autograd::Variable.new(fixture.fetch("means"), requires_grad: true)

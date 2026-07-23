@@ -36,3 +36,13 @@ Record only decisions that differ from, clarify, or resolve ambiguity in the des
   `k4..k6` form the denominator. Fisheye coefficients multiply `theta^3..theta^9`.
 - Distortion coefficients are calibration constants. Gradients are provided for Gaussian geometry,
   while coefficient and intrinsic optimization remain outside this phase.
+
+### 2026-07-24: World-space extension paths prioritize one exact reference (P11-6)
+
+- Hit-distance modes evaluate the anisotropic Gaussian in world space and replace the final feature
+  channel with the per-pixel closest-approach distance, matching the upstream eval3d definition.
+- The same Ruby implementation serves both backends. Its geometry VJP uses float64/float32 central
+  differences so the extended path remains differentiable without maintaining a second derivative
+  implementation; the core 2D raster path retains its analytic/native backward.
+- `global_z_order: false` changes projection depths to camera-space Euclidean center distance. Near
+  and far culling continue to use camera z, and the Euclidean norm VJP is propagated to means.

@@ -3,7 +3,7 @@
 module Gsplat
   # Input and option validation for the high-level renderer.
   module RasterizationValidation
-    RENDER_MODES = %w[RGB D ED RGB+D RGB+ED].freeze
+    RENDER_MODES = %w[RGB d Ed D ED RGB-d RGB-Ed RGB+D RGB+ED].freeze
     RASTERIZE_MODES = %w[classic antialiased].freeze
 
     module_function
@@ -25,11 +25,8 @@ module Gsplat
       raise ArgumentError, "#{invalid[0]} must be a positive integer" if invalid
     end
 
-    def warn_unsupported_options(packed, global_z_order)
+    def warn_unsupported_options(packed, _global_z_order)
       Gsplat.logger.warn("packed mode is unsupported; using dense mode") if packed
-      return if global_z_order
-
-      Gsplat.logger.warn("global_z_order=false is unsupported; using camera depth order")
     end
 
     # rubocop:disable Metrics/ParameterLists

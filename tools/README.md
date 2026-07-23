@@ -24,6 +24,9 @@ CPU generation covers covariance, SH, projection, intersections, DefaultStrategy
 Rasterization, end-to-end rendering, AbsGrad, and MCMC relocation use upstream CUDA kernels and are
 recorded as skipped in `test/golden/manifest.json`.
 
+The Euclidean-order and single-ray hit-distance fixtures are analytic CPU cases. Their equations
+mirror current upstream eval3d semantics while keeping the primary package pin at 1.5.3.
+
 ## Complete CUDA generation
 
 On a machine with a CUDA toolkit compatible with the pinned PyTorch:

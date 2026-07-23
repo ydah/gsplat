@@ -15,7 +15,11 @@ module Gsplat
     # rubocop:disable Metrics/ParameterLists
     def prepare_colors(means, colors, viewmats, radii, camera_count, sh_degree)
       # rubocop:enable Metrics/ParameterLists
-      return camera_broadcast(colors, camera_count) unless sh_degree
+      unless sh_degree
+        return colors if Ops::TensorOps.data(colors).ndim == 3
+
+        return Ops::TensorOps.apply(Ops::CameraBroadcast, colors, camera_count)
+      end
 
       directions = Ops::TensorOps.apply(Ops::CameraDirections, means, viewmats)
       coefficients = Ops::TensorOps.apply(Ops::CameraBroadcast, colors, camera_count)
@@ -39,7 +43,7 @@ module Gsplat
       return [colors, nil] if render_mode == "RGB"
 
       depth_features = Ops::TensorOps.apply(Ops::DepthFeatures, depths)
-      return [depth_features, 0] if %w[D ED].include?(render_mode)
+      return [depth_features, 0] if %w[d Ed D ED].include?(render_mode)
 
       feature_count = Ops::TensorOps.data(colors).shape[-1]
       [Ops::TensorOps.apply(Ops::ConcatDepth, colors, depth_features), feature_count]
@@ -103,6 +107,29 @@ module Gsplat
       [Ops::TensorOps.apply(Ops::ConcatFeatures, *rendered_chunks), alpha]
     end
     private_class_method :rasterize_feature_chunks
+
+    # rubocop:disable Metrics/ParameterLists
+    def rasterize_hit_features(means, quats, scales, features, opacities, viewmats, intrinsics,
+                               width, height, tile_size, offsets, flatten_ids, backgrounds:,
+                               camera_model:)
+      # rubocop:enable Metrics/ParameterLists
+      raise ArgumentError, "hit-distance modes require quats and scales" unless quats && scales
+
+      inputs = [means, quats, scales, features, opacities, backgrounds]
+      options = {
+        viewmats: Ops::TensorOps.data(viewmats),
+        intrinsics: Ops::TensorOps.data(intrinsics),
+        width: width,
+        height: height,
+        tile_size: tile_size,
+        offsets: offsets,
+        flatten_ids: flatten_ids,
+        camera_model: camera_model.to_s
+      }
+      return Ops::Eval3dRasterize.apply(*inputs, **options) if inputs.any?(Autograd::Variable)
+
+      Backend::RubyEval3dRasterizer.forward(*inputs, **options)
+    end
 
     # rubocop:disable Metrics/ParameterLists
     def metadata(radii, means2d, depths, conics, opacities, tile_width, tile_height,

@@ -42,6 +42,8 @@ def all_cases() -> list[Case]:
             Case("raster_features32", "raster", {"channels": 32}, requires_cuda=True),
             Case("raster_features40", "raster", {"channels": 40}, requires_cuda=True),
             Case("render_fisheye_distorted", "fisheye_distorted", {}, requires_cuda=True),
+            Case("distance_order", "distance_order", {}),
+            Case("hit_distance_modes", "hit_distance", {}),
             Case("strategy_default_masks", "strategy", {}),
             Case("relocation_mcmc", "relocation", {}, requires_cuda=True),
             Case("ssim_rgb", "ssim", {}),
@@ -106,6 +108,8 @@ def generate(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
         "isect": _isect_case,
         "raster": _raster_case,
         "fisheye_distorted": _fisheye_distorted_case,
+        "distance_order": _distance_order_case,
+        "hit_distance": _hit_distance_case,
         "render": _render_case,
         "strategy": _strategy_case,
         "relocation": _relocation_case,
@@ -332,6 +336,32 @@ def _fisheye_distorted_case(_case: Case, runtime: dict[str, Any]) -> dict[str, A
         "render_alphas": render_alphas,
         "radii": meta["radii"],
     })
+
+
+def _distance_order_case(_case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
+    torch, device = runtime["torch"], runtime["device"]
+    camera_means = torch.tensor([[[1.0, 0.0, 2.0], [0.0, 0.0, 2.1]]], device=device)
+    z_depths = camera_means[..., 2]
+    euclidean_depths = torch.linalg.vector_norm(camera_means, dim=-1)
+    return locals_payload(locals(), "camera_means", "z_depths", "euclidean_depths")
+
+
+def _hit_distance_case(_case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
+    torch, device = runtime["torch"], runtime["device"]
+    means = torch.tensor([[0.0, 0.0, 2.0]], device=device)
+    quats = torch.tensor([[1.0, 0.0, 0.0, 0.0]], device=device)
+    scales = torch.tensor([[0.5, 0.5, 0.5]], device=device)
+    opacities = torch.tensor([0.5], device=device)
+    colors = torch.tensor([[0.2, 0.4, 0.6]], device=device)
+    render_alphas = torch.tensor([[[[0.5]]]], device=device)
+    render_d = torch.tensor([[[[1.0]]]], device=device)
+    render_ed = torch.tensor([[[[2.0]]]], device=device)
+    render_rgb_d = torch.tensor([[[[0.1, 0.2, 0.3, 1.0]]]], device=device)
+    render_rgb_ed = torch.tensor([[[[0.1, 0.2, 0.3, 2.0]]]], device=device)
+    return locals_payload(
+        locals(), "means", "quats", "scales", "opacities", "colors", "render_alphas",
+        "render_d", "render_ed", "render_rgb_d", "render_rgb_ed"
+    )
 
 
 def _render_case(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:

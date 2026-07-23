@@ -38,13 +38,31 @@ module Gsplat
                            height
                          )
                      end
-          gradient[true, 2] += grad_depths[camera_index, true]
+          gradient = add_depth_vjp(
+            gradient,
+            camera_means,
+            grad_depths[camera_index, true],
+            options.fetch(:global_z_order, true)
+          )
           output[camera_index, true, true] = gradient
         end
         # rubocop:enable Metrics/BlockLength
         output
       end
       private_class_method :camera_mean_vjp
+
+      def add_depth_vjp(gradient, means, grad_depth, global_z_order)
+        if global_z_order
+          gradient[true, 2] += grad_depth
+          return gradient
+        end
+
+        distance = (means**2).sum(axis: 1)**0.5
+        safe_distance = distance.dup
+        safe_distance[safe_distance.lt(1e-12)] = 1 if safe_distance.lt(1e-12).any?
+        gradient + (means * (grad_depth / safe_distance).reshape(means.shape[0], 1))
+      end
+      private_class_method :add_depth_vjp
 
       def extended_camera?(options)
         options.fetch(:camera_model).to_s == "fisheye" ||

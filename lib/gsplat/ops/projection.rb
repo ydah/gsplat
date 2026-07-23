@@ -78,7 +78,8 @@ module Gsplat
     def fully_fused_projection(means, viewmats:, ks:, width:, height:, covars: nil, quats: nil, scales: nil,
                                eps2d: 0.3, near_plane: 0.01, far_plane: 1e10, radius_clip: 0.0,
                                calc_compensations: false, camera_model: "pinhole",
-                               radial_coeffs: nil, tangential_coeffs: nil, thin_prism_coeffs: nil)
+                               radial_coeffs: nil, tangential_coeffs: nil, thin_prism_coeffs: nil,
+                               global_z_order: true)
       # rubocop:enable Metrics/ParameterLists, Naming/MethodParameterName
       inputs = [means, covars, quats, scales, viewmats, ks]
       options = {
@@ -90,7 +91,8 @@ module Gsplat
         camera_model: camera_model,
         radial_coeffs: radial_coeffs,
         tangential_coeffs: tangential_coeffs,
-        thin_prism_coeffs: thin_prism_coeffs
+        thin_prism_coeffs: thin_prism_coeffs,
+        global_z_order: global_z_order
       }
       if inputs.any?(Autograd::Variable)
         return Ops::FullyFusedProjection.apply(

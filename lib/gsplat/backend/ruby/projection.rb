@@ -9,7 +9,8 @@ module Gsplat
       # rubocop:disable Metrics/ParameterLists
       def forward(means, covars, quaternions, scales, viewmats, intrinsics, width, height,
                   eps2d:, near_plane:, far_plane:, radius_clip:, calc_compensations:, camera_model:,
-                  radial_coeffs: nil, tangential_coeffs: nil, thin_prism_coeffs: nil)
+                  radial_coeffs: nil, tangential_coeffs: nil, thin_prism_coeffs: nil,
+                  global_z_order: true)
         # rubocop:enable Metrics/ParameterLists
         inputs = prepare_inputs(
           means, covars, quaternions, scales, viewmats, intrinsics, width, height,
@@ -40,7 +41,8 @@ module Gsplat
           near_plane,
           far_plane,
           radius_clip,
-          calc_compensations
+          calc_compensations,
+          global_z_order: global_z_order
         )
       end
 
@@ -185,7 +187,8 @@ module Gsplat
 
       # rubocop:disable Metrics/AbcSize, Metrics/ParameterLists
       def finish_projection(camera_means, means2d, covars2d, width, height, eps2d,
-                            near_plane, far_plane, radius_clip, calc_compensations)
+                            near_plane, far_plane, radius_clip, calc_compensations,
+                            global_z_order: true)
         # rubocop:enable Metrics/ParameterLists
         determinant_original = Math::Mat.det2x2(covars2d)
         regularized = covars2d.dup
@@ -203,8 +206,13 @@ module Gsplat
         variance_y[variance_y.lt(0)] = 0 if variance_y.lt(0).any?
         radius_x = Numo::Int32.cast((3.33 * (variance_x**0.5)).ceil)
         radius_y = Numo::Int32.cast((3.33 * (variance_y**0.5)).ceil)
-        depths = camera_means[true, true, 2].dup
-        visible = determinant.gt(0) & depths.gt(near_plane) & depths.lt(far_plane)
+        z_depths = camera_means[true, true, 2]
+        depths = if global_z_order
+                   z_depths.dup
+                 else
+                   (camera_means**2).sum(axis: 2)**0.5
+                 end
+        visible = determinant.gt(0) & z_depths.gt(near_plane) & z_depths.lt(far_plane)
         visible &= radius_x.gt(radius_clip) | radius_y.gt(radius_clip)
         visible &= (means2d[true, true, 0] + radius_x).gt(0)
         visible &= means2d[true, true, 0] - radius_x < width

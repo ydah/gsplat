@@ -107,6 +107,29 @@ class ProjectionBackwardTest < Minitest::Test
     assert_allclose scale_var.grad, fixture.fetch("grad_scales"), atol: 1e-4, rtol: 1e-4
   end
 
+  def test_matches_python_direct_covariance_gradients
+    fixture = golden("proj_covars_c1_n1000")
+    mean_var = Gsplat::Autograd::Variable.new(fixture.fetch("means"), requires_grad: true)
+    covariance_var = Gsplat::Autograd::Variable.new(fixture.fetch("covars"), requires_grad: true)
+    _, means2d, depths, conics, compensations = Gsplat.fully_fused_projection(
+      mean_var,
+      covars: covariance_var,
+      viewmats: fixture.fetch("viewmats"),
+      ks: fixture.fetch("ks"),
+      width: fixture.fetch("width").to_i,
+      height: fixture.fetch("height").to_i,
+      calc_compensations: true
+    )
+    weights = %w[weight_means2d weight_depths weight_conics weight_compensations].map do |name|
+      fixture.fetch(name)
+    end
+
+    ProjectionLoss.apply(means2d, depths, conics, compensations, weights: weights).backward
+
+    assert_allclose mean_var.grad, fixture.fetch("grad_means"), atol: 1e-4, rtol: 1e-4
+    assert_allclose covariance_var.grad, fixture.fetch("grad_covars"), atol: 1e-4, rtol: 1e-4
+  end
+
   private
 
   def projection_options

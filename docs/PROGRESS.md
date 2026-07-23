@@ -37,6 +37,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P10-3 | Complete | 2026-07-23 | C tile enumeration, stable 64-bit radix sort and offset encoding |
 | P10-4 | Complete | 2026-07-23 | GVL-free OpenMP raster forward/backward with atomic scatter-add |
 | P11-1 | Complete (golden pending) | 2026-07-23 | N-D features, differentiable channel chunking and radius clipping |
+| P11-2 | Complete (golden pending) | 2026-07-23 | Full and packed direct covariance forward/backward across the renderer |
 
 ## Phase gates
 

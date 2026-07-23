@@ -144,9 +144,66 @@ class RasterizationTest < Minitest::Test
     assert_allclose clipped_alpha, Numo::DFloat.zeros(1, 3, 4, 1), atol: 0.0, rtol: 0.0
   end
 
+  def test_direct_full_and_packed_covariances_cover_complete_pipeline
+    full, = Gsplat.quat_scale_to_covar_preci(
+      Numo::SFloat.cast(@quaternions),
+      Numo::SFloat.cast(@scales),
+      compute_preci: false
+    )
+    packed, = Gsplat.quat_scale_to_covar_preci(
+      Numo::SFloat.cast(@quaternions),
+      Numo::SFloat.cast(@scales),
+      compute_preci: false,
+      triu: true
+    )
+    expected = with_backend(:ruby) do
+      render_typed(
+        Numo::SFloat.cast(@colors), nil, channel_chunk: 32, rasterize_mode: "antialiased"
+      )
+    end
+    [full, packed].each do |covariance|
+      ruby = with_backend(:ruby) { render_covariance(covariance) }
+      native = with_backend(:native) { render_covariance(covariance) }
+      assert_allclose ruby[0], expected[0], atol: 3e-5, rtol: 3e-5
+      assert_allclose ruby[1], expected[1], atol: 3e-5, rtol: 3e-5
+      assert_allclose native[0], expected[0], atol: 3e-5, rtol: 3e-5
+      assert_allclose native[1], expected[1], atol: 3e-5, rtol: 3e-5
+    end
+  end
+
+  def test_packed_covariance_backward_reaches_input
+    packed, = Gsplat.quat_scale_to_covar_preci(
+      @quaternions,
+      @scales,
+      compute_preci: false,
+      triu: true
+    )
+    covariance = Gsplat::Autograd::Variable.new(packed, requires_grad: true)
+    rendered, alphas, = render_covariance(covariance)
+    RenderLoss.apply(rendered, alphas).backward
+    assert_equal packed.shape, covariance.grad.shape
+    assert covariance.grad.abs.gt(0).any?
+  end
+
   private
 
-  def render_typed(colors, backgrounds, channel_chunk:)
+  def render_covariance(covariance)
+    type = Gsplat::Ops::TensorOps.data(covariance).class
+    Gsplat.rasterization(
+      means: type.cast(@means),
+      covars: covariance,
+      opacities: type.cast(@opacities),
+      colors: type.cast(@colors),
+      viewmats: type.cast(@viewmats),
+      ks: type.cast(@intrinsics),
+      width: 4,
+      height: 3,
+      tile_size: 4,
+      rasterize_mode: "antialiased"
+    )
+  end
+
+  def render_typed(colors, backgrounds, channel_chunk:, rasterize_mode: "classic")
     Gsplat.rasterization(
       means: Numo::SFloat.cast(@means),
       quats: Numo::SFloat.cast(@quaternions),
@@ -159,7 +216,8 @@ class RasterizationTest < Minitest::Test
       width: 4,
       height: 3,
       tile_size: 4,
-      channel_chunk: channel_chunk
+      channel_chunk: channel_chunk,
+      rasterize_mode: rasterize_mode
     )
   end
 

@@ -26,6 +26,7 @@ def all_cases() -> list[Case]:
     cases = [
         Case("quat_covar_full", "quat", {"triu": False}),
         Case("quat_covar_triu", "quat", {"triu": True}),
+        Case("proj_covars_c1_n1000", "proj_covars", {"cameras": 1, "count": 1_000}),
         *(Case(f"sh_deg{degree}", "sh", {"degree": degree}) for degree in range(5)),
     ]
     for camera_model in ("pinhole", "ortho"):
@@ -37,7 +38,9 @@ def all_cases() -> list[Case]:
             Case("isect_c3_n1000", "isect", {"cameras": 3, "count": 1_000}),
             Case("isect_c1_n10000", "isect", {"cameras": 1, "count": 10_000}),
             Case("raster_rgb", "raster", {"channels": 3}, requires_cuda=True),
+            Case("raster_features8", "raster", {"channels": 8}, requires_cuda=True),
             Case("raster_features32", "raster", {"channels": 32}, requires_cuda=True),
+            Case("raster_features40", "raster", {"channels": 40}, requires_cuda=True),
             Case("strategy_default_masks", "strategy", {}),
             Case("relocation_mcmc", "relocation", {}, requires_cuda=True),
             Case("ssim_rgb", "ssim", {}),
@@ -98,6 +101,7 @@ def generate(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
         "quat": _quat_case,
         "sh": _sh_case,
         "proj": _projection_case,
+        "proj_covars": _projection_covars_case,
         "isect": _isect_case,
         "raster": _raster_case,
         "render": _render_case,
@@ -210,6 +214,35 @@ def _projection_case(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
     payload = {**scene, **locals_payload(
         locals(), "radii", "means2d", "depths", "conics", "compensations", "weight_means2d",
         "weight_depths", "weight_conics", "weight_compensations", "grad_means", "grad_quats", "grad_scales"
+    )}
+    return tensor_payload(payload)
+
+
+def _projection_covars_case(case: Case, runtime: dict[str, Any]) -> dict[str, Any]:
+    torch, reference = runtime["torch"], runtime["reference"]
+    scene = _scene(runtime, case.options["count"], case.options["cameras"])
+    means = scene["means"].requires_grad_()
+    covars, _ = reference._quat_scale_to_covar_preci(
+        scene["quats"], scene["scales"], compute_preci=False
+    )
+    covars = covars.detach().requires_grad_()
+    radii, means2d, depths, conics, compensations = reference._fully_fused_projection(
+        means, covars, scene["viewmats"], scene["ks"], scene["width"], scene["height"],
+        calc_compensations=True, camera_model="pinhole"
+    )
+    weight_means2d, weight_depths = torch.randn_like(means2d), torch.randn_like(depths)
+    weight_conics, weight_compensations = torch.randn_like(conics), torch.randn_like(compensations)
+    loss = (
+        (means2d * weight_means2d).sum()
+        + (depths * weight_depths).sum()
+        + (conics * weight_conics).sum()
+        + (compensations * weight_compensations).sum()
+    )
+    grad_means, grad_covars = torch.autograd.grad(loss, (means, covars))
+    payload = {**scene, **locals_payload(
+        locals(), "covars", "radii", "means2d", "depths", "conics", "compensations",
+        "weight_means2d", "weight_depths", "weight_conics", "weight_compensations",
+        "grad_means", "grad_covars"
     )}
     return tensor_payload(payload)
 

@@ -3,6 +3,27 @@
 require "test_helper"
 
 class RasterizeForwardTest < Minitest::Test
+  %w[raster_features8 raster_features40].each do |fixture_name|
+    define_method("test_matches_python_#{fixture_name}") do
+      fixture = golden(fixture_name)
+      rendered, alphas = Gsplat.rasterize_to_pixels(
+        fixture.fetch("means2d"),
+        fixture.fetch("conics"),
+        fixture.fetch("colors"),
+        fixture.fetch("opacities"),
+        64,
+        48,
+        16,
+        fixture.fetch("isect_offsets"),
+        fixture.fetch("flatten_ids"),
+        backgrounds: fixture.fetch("backgrounds")
+      )
+
+      assert_allclose rendered, fixture.fetch("render_colors"), atol: 1e-4, rtol: 1e-4
+      assert_allclose alphas, fixture.fetch("render_alphas"), atol: 1e-4, rtol: 1e-4
+    end
+  end
+
   def setup
     @previous_backend = Gsplat.backend
     Gsplat.backend = :ruby

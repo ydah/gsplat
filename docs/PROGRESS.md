@@ -16,6 +16,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P3-1 | Complete (golden pending) | 2026-07-23 | Pinhole forward, world/camera primitives, scalar radii, culling and compensation |
 | P3-2 | Complete (golden pending) | 2026-07-23 | Analytic projection VJPs for means, covariance, quaternion and scale |
 | P3-3 | Complete (golden pending) | 2026-07-23 | Orthographic forward/backward and camera-model dispatch |
+| P4-1 | Complete (golden pending) | 2026-07-23 | Tile AABBs, 64-bit intersection keys, sorting and prefix offsets |
 
 ## Phase gates
 
@@ -48,4 +49,12 @@ This file is the restart point for implementation sessions. Read it after `READM
 - L3: pinhole and orthographic tests are present and skip until golden generation is run.
 - Scalar radii follow the v1 design; golden visibility compares against upstream elliptical radii.
 - Full suite: 63 tests, 155 assertions, no failures, 5 documented golden-data skips.
+- RuboCop: no offenses.
+
+### P4 — Complete (golden-data gate pending)
+
+- L1: exact handcrafted tile counts, 64-bit keys, flattened ids and empty-tile offsets pass.
+- Scalar v1 radii and upstream elliptical radii are both accepted.
+- L3: `isect_c3_n1000.npz` coverage is present and skips until golden generation is run.
+- Full suite: 68 tests, 163 assertions, no failures, 6 documented golden-data skips.
 - RuboCop: no offenses.

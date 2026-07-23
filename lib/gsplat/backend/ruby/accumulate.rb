@@ -10,7 +10,7 @@ module Gsplat
 
       module_function
 
-      # rubocop:disable Metrics/ParameterLists
+      # rubocop:disable Metrics/AbcSize, Metrics/ParameterLists
       def forward(means2d, conics, opacities, colors, backgrounds, width, height)
         # rubocop:enable Metrics/ParameterLists
         inputs = validate_inputs(means2d, conics, opacities, colors, backgrounds, width, height)
@@ -21,8 +21,9 @@ module Gsplat
         pixels_x, pixels_y = pixel_coordinates(means2d.class, width, height)
         render_colors = means2d.class.zeros(camera_count, pixel_count, channel_count)
         render_alphas = means2d.class.zeros(camera_count, pixel_count)
+        last_ids = Numo::Int32.zeros(camera_count, pixel_count)
         camera_count.times do |camera_index|
-          composited, transmittance = composite_camera(
+          composited, transmittance, camera_last_ids = composite_camera(
             means2d[camera_index, true, true],
             conics[camera_index, true, true],
             opacities[camera_index, true],
@@ -37,12 +38,15 @@ module Gsplat
           end
           render_colors[camera_index, true, true] = composited
           render_alphas[camera_index, true] = 1 - transmittance
+          last_ids[camera_index, true] = camera_last_ids + (camera_index * gaussian_count)
         end
         [
           render_colors.reshape(camera_count, height, width, channel_count),
-          render_alphas.reshape(camera_count, height, width, 1)
+          render_alphas.reshape(camera_count, height, width, 1),
+          last_ids.reshape(camera_count, height, width)
         ]
       end
+      # rubocop:enable Metrics/AbcSize
 
       # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/ParameterLists, Metrics/PerceivedComplexity
       def validate_inputs(means2d, conics, opacities, colors, backgrounds, width, height)
@@ -101,6 +105,7 @@ module Gsplat
         channel_count = colors.shape[-1]
         transmittance = means2d.class.ones(pixel_count)
         composited = means2d.class.zeros(pixel_count, channel_count)
+        last_ids = Numo::Int32.zeros(pixel_count)
         active = Numo::Bit.ones(pixel_count)
         gaussian_count.times do |gaussian_index|
           delta_x = means2d[gaussian_index, 0] - pixels_x
@@ -120,11 +125,12 @@ module Gsplat
           composited += contribution.reshape(pixel_count, 1) *
                         colors[gaussian_index, true].reshape(1, channel_count)
           transmittance[accepted] = next_transmittance[accepted] if accepted.any?
+          last_ids[accepted] = gaussian_index if accepted.any?
           terminating = candidate & next_transmittance.le(TRANSMITTANCE_STOP)
           active[terminating] = 0 if terminating.any?
           break unless active.any?
         end
-        [composited, transmittance]
+        [composited, transmittance, last_ids]
       end
       # rubocop:enable Metrics/AbcSize
       private_class_method :composite_camera

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../backend/ruby/accumulate"
+require_relative "../backend/ruby/accumulate_backward"
 
 # Brute-force reference rasterization API.
 module Gsplat
@@ -11,8 +12,7 @@ module Gsplat
         # rubocop:disable Metrics/ParameterLists
         def forward(context, means2d, conics, opacities, colors, backgrounds, width, height)
           # rubocop:enable Metrics/ParameterLists
-          context.save(means2d, conics, opacities, colors, backgrounds, width, height)
-          Backend.dispatch(
+          render_colors, render_alphas, last_ids = Backend.dispatch(
             :accumulate_forward,
             means2d,
             conics,
@@ -22,10 +22,22 @@ module Gsplat
             width,
             height
           )
+          context.save(
+            means2d, conics, opacities, colors, backgrounds, width, height,
+            render_alphas, last_ids
+          )
+          [render_colors, render_alphas]
         end
 
-        def backward(_context, *_grad_outputs)
-          raise Gsplat::Error, "accumulate backward is not implemented yet"
+        def backward(context, grad_render_colors, grad_render_alphas)
+          saved = context.saved_values
+          gradients = Backend.dispatch(
+            :accumulate_backward,
+            *saved,
+            grad_render_colors,
+            grad_render_alphas
+          )
+          [*gradients, nil, nil]
         end
       end
     end
@@ -44,9 +56,10 @@ module Gsplat
         *inputs,
         width,
         height
-      )
+      ).first(2)
     end
   end
 
   Backend.register(:accumulate_forward, :ruby, Backend::RubyAccumulate.method(:forward))
+  Backend.register(:accumulate_backward, :ruby, Backend::RubyAccumulateBackward.method(:backward))
 end

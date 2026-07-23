@@ -19,6 +19,8 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P4-1 | Complete (golden pending) | 2026-07-23 | Tile AABBs, 64-bit intersection keys, sorting and prefix offsets |
 | P5-1 | Complete | 2026-07-23 | Brute-force alpha compositor with arbitrary channels and backgrounds |
 | P5-2 | Complete (golden pending) | 2026-07-23 | Vectorized tile compositor, masks, partial edge tiles and retained last ids |
+| P6-1 | Complete (golden pending) | 2026-07-23 | Reverse tile scan VJPs and brute-force gradient cross-check |
+| P6-2 | Complete (golden pending) | 2026-07-23 | Optional per-pixel absolute mean-gradient accumulation |
 
 ## Phase gates
 
@@ -67,4 +69,13 @@ This file is the restart point for implementation sessions. Read it after `READM
 - Partial edge tiles, arbitrary channels, backgrounds and tile masks are covered.
 - L3: `raster_rgb.npz` forward coverage is present and skips until CUDA golden generation is run.
 - Full suite: 75 tests, 175 assertions, no failures, 7 documented golden-data skips.
+- RuboCop: no offenses.
+
+### P6 — Complete (golden-data gate pending)
+
+- L2: float64 central differences pass for means, conics, colors, opacities and backgrounds.
+- L4: tile and brute-force backward gradients match exactly on the reference scene.
+- `absgrad` accumulates absolute per-pixel mean contributions and allocates no buffer when disabled.
+- L3: raster gradients and absolute gradients skip until CUDA golden generation is run.
+- Full suite: 81 tests, 190 assertions, no failures, 9 documented golden-data skips.
 - RuboCop: no offenses.

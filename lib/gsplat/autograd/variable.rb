@@ -4,7 +4,7 @@ module Gsplat
   module Autograd
     # A Numo array with an optional reverse-mode gradient and creator node.
     class Variable
-      attr_reader :data, :grad, :creator
+      attr_reader :absgrad, :data, :grad, :creator
 
       # @param data [Numo::NArray] tensor data
       # @param requires_grad [Boolean] whether to accumulate a gradient
@@ -16,6 +16,7 @@ module Gsplat
         @requires_grad = requires_grad
         @creator = creator
         @grad = nil
+        @absgrad = nil
       end
 
       # Whether this variable accumulates gradients.
@@ -30,6 +31,21 @@ module Gsplat
       # @return [void]
       def zero_grad!
         @grad = nil
+        @absgrad = nil
+      end
+
+      # Accumulates an auxiliary absolute gradient produced by rasterization.
+      #
+      # @api private
+      # @param gradient [Numo::NArray]
+      # @return [void]
+      def accumulate_absgrad(gradient)
+        gradient = cast_gradient(gradient)
+        unless gradient.shape == data.shape
+          raise ShapeError, "absgrad shape mismatch: expected #{data.shape.inspect}, got #{gradient.shape.inspect}"
+        end
+
+        @absgrad = @absgrad ? @absgrad + gradient : gradient.dup
       end
 
       # Removes a creator after its graph node has completed backward.

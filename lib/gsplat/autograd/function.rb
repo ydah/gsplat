@@ -36,7 +36,7 @@ module Gsplat
         # @return [Variable, Array<Variable>]
         def apply(*inputs, **)
           needs_input_grad = inputs.map { |input| input.is_a?(Variable) && input.requires_grad? }
-          context = Context.new(needs_input_grad)
+          context = Context.new(needs_input_grad, inputs)
           raw_inputs = inputs.map { |input| input.is_a?(Variable) ? input.data : input }
           result = forward(context, *raw_inputs, **)
           multiple_outputs = result.is_a?(Array)

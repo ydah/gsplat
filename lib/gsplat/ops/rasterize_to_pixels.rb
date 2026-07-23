@@ -2,6 +2,8 @@
 
 require_relative "../backend/ruby/tile_compositor"
 require_relative "../backend/ruby/rasterize_to_pixels"
+require_relative "../backend/ruby/tile_compositor_backward"
+require_relative "../backend/ruby/rasterize_to_pixels_backward"
 
 # Differentiable tile rasterization API.
 module Gsplat
@@ -34,8 +36,33 @@ module Gsplat
           [render_colors, render_alphas]
         end
 
-        def backward(_context, *_grad_outputs)
-          raise Gsplat::Error, "rasterize_to_pixels backward is not implemented yet"
+        def backward(context, grad_render_colors, grad_render_alphas)
+          saved = context.saved_values
+          means2d, conics, colors, opacities, backgrounds, masks, width, height,
+            tile_size, offsets, flatten_ids, render_alphas, last_ids, absgrad = saved
+          gradients, means2d_absgrad = Backend.dispatch(
+            :rasterize_to_pixels_backward,
+            means2d,
+            conics,
+            colors,
+            opacities,
+            backgrounds,
+            masks,
+            width,
+            height,
+            tile_size,
+            offsets,
+            flatten_ids,
+            render_alphas,
+            last_ids,
+            grad_render_colors,
+            grad_render_alphas,
+            absgrad: absgrad
+          )
+          if absgrad && context.inputs[0].is_a?(Autograd::Variable)
+            context.inputs[0].accumulate_absgrad(means2d_absgrad)
+          end
+          [*gradients, nil, nil, nil, nil, nil, nil]
         end
       end
     end
@@ -60,5 +87,10 @@ module Gsplat
     :rasterize_to_pixels_forward,
     :ruby,
     Backend::RubyRasterizeToPixels.method(:forward)
+  )
+  Backend.register(
+    :rasterize_to_pixels_backward,
+    :ruby,
+    Backend::RubyRasterizeToPixelsBackward.method(:backward)
   )
 end

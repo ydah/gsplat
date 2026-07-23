@@ -7,11 +7,13 @@ module Gsplat
 
     # Per-operation values retained for the backward pass.
     class Context
-      attr_reader :needs_input_grad, :saved_values
+      attr_reader :inputs, :needs_input_grad, :saved_values
 
       # @param needs_input_grad [Array<Boolean>] gradient requirement for each input
-      def initialize(needs_input_grad)
+      # @param inputs [Array<Object, Variable>] original Function inputs
+      def initialize(needs_input_grad, inputs = [])
         @needs_input_grad = needs_input_grad.freeze
+        @inputs = inputs
         @saved_values = []
       end
 
@@ -28,6 +30,7 @@ module Gsplat
       # @return [void]
       def clear
         @saved_values.clear
+        @inputs = []
       end
     end
 

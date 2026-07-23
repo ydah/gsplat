@@ -13,3 +13,10 @@ Gemfile.lock
 *.gem
 __pycache__/
 *.pyc
+/ext/gsplat_native/Makefile
+/ext/gsplat_native/mkmf.log
+/ext/gsplat_native/*.o
+/ext/gsplat_native/*.bundle
+/ext/gsplat_native/*.so
+/lib/gsplat/gsplat_native.bundle
+/lib/gsplat/gsplat_native.so

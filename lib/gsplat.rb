@@ -43,6 +43,7 @@ require_relative "gsplat/io/image"
 require_relative "gsplat/io/npy"
 require_relative "gsplat/io/ply"
 require_relative "gsplat/utils"
+require_relative "gsplat/native"
 
 # Differentiable 3D Gaussian splatting for Ruby.
 module Gsplat

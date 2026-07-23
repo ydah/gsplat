@@ -25,6 +25,7 @@ Gem::Specification.new do |spec|
   end
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
+  spec.extensions = ["ext/gsplat_native/extconf.rb"]
   spec.require_paths = ["lib"]
 
   spec.add_dependency "numo-narray", ">= 0.9", "< 1.0"

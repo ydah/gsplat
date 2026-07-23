@@ -32,6 +32,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P9-3 | Complete (golden pending) | 2026-07-23 | k-NN initialization, SH color helpers, scene scale and differentiable SSIM |
 | P9-4 | Complete | 2026-07-23 | NPZ training checkpoints and vips/chunky_png RGB image IO |
 | P9-5 | Complete | 2026-07-23 | Multi-view Trainer, staged SH, strategy hooks and training/render CLIs |
+| P10-1 | Complete | 2026-07-23 | Optional C extension, Numo bridge, GVL release and build fallback |
 
 ## Phase gates
 

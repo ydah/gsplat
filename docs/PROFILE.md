@@ -35,3 +35,15 @@ With the P10-2 extension loaded (`GSPLAT_BACKEND=auto`) on the same workload:
 
 The C paths cover contiguous float32 forward calls. Float64, masked SH, and analytic backward use
 the Ruby implementation to preserve the existing numerical behavior.
+
+## Native intersections — 2026-07-23
+
+The P10-3 kernel adds float32 tile-bound enumeration, 64-bit key generation, stable LSD radix sort,
+and tile-offset encoding. It retains the same key layout and ordering as the Ruby implementation.
+
+| Operation | Ruby | Native/auto | Speedup |
+|---|---:|---:|---:|
+| Tile intersections and sort | 2.505 ms | 0.045 ms | 55.7× |
+
+The measurement uses the same 1,000-Gaussian workload as the baseline. Float64 inputs retain the
+Ruby path so numerical gradient tests continue to exercise the reference implementation.

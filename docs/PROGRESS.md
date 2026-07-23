@@ -34,6 +34,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P9-5 | Complete | 2026-07-23 | Multi-view Trainer, staged SH, strategy hooks and training/render CLIs |
 | P10-1 | Complete | 2026-07-23 | Optional C extension, Numo bridge, GVL release and build fallback |
 | P10-2 | Complete (hybrid) | 2026-07-23 | C float32 projection/SH forward; analytic backward and float64 fallback |
+| P10-3 | Complete | 2026-07-23 | C tile enumeration, stable 64-bit radix sort and offset encoding |
 
 ## Phase gates
 
@@ -119,4 +120,12 @@ This file is the restart point for implementation sessions. Read it after `READM
 - `simple_trainer.rb` and `render_path.rb` provide the documented real-COLMAP workflow.
 - L3 SSIM remains pending golden generation; optional image tests skip under Bundler when neither backend is declared.
 - Full suite: 131 tests, 817 assertions, no failures, 14 documented skips.
+- RuboCop: no offenses.
+
+### P10-3 — Complete
+
+- Native float32 intersections exactly match the Ruby keys, flattened ids, counts and offsets.
+- The stable eight-pass radix sort preserves key/id pairing and runs without the Ruby GVL.
+- The 1,000-Gaussian profile improves from 2.505 ms to 0.045 ms (55.7×).
+- Full suite: 136 tests, 836 assertions, no failures, 14 documented skips.
 - RuboCop: no offenses.

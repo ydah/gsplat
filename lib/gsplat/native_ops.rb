@@ -56,6 +56,42 @@ module Gsplat
         camera_model.to_s == "ortho"
       )
     end
+
+    # rubocop:disable Metrics/ParameterLists
+    def isect_tiles(means2d, radii, depths, tile_size, tile_width, tile_height, sort:)
+      # rubocop:enable Metrics/ParameterLists
+      prepared = Backend::RubyIsectTiles.send(
+        :validate_inputs, means2d, radii, depths, tile_size, tile_width, tile_height
+      )
+      typed_means, typed_radii, typed_depths = prepared
+      unless typed_means.is_a?(Numo::SFloat)
+        return Backend::RubyIsectTiles.forward(
+          means2d, radii, depths, tile_size, tile_width, tile_height, sort: sort
+        )
+      end
+      tile_bits = Backend::RubyIsectTiles.send(:tile_n_bits, tile_width, tile_height)
+      Backend::RubyIsectTiles.send(:validate_key_width!, typed_means.shape[0], tile_bits)
+
+      Native.isect_tiles_sfloat(
+        typed_means.dup,
+        typed_radii.dup,
+        typed_depths.dup,
+        tile_size,
+        tile_width,
+        tile_height,
+        sort
+      )
+    end
+
+    def isect_offset_encode(keys, camera_count, tile_width, tile_height)
+      Backend::RubyIsectTiles.send(:validate_grid!, camera_count, tile_width, tile_height)
+      unless keys.is_a?(Numo::Int64)
+        return Backend::RubyIsectTiles.offset_encode(keys, camera_count, tile_width, tile_height)
+      end
+      raise ShapeError, "expected isect_ids [M]" unless keys.ndim == 1
+
+      Native.isect_offset_encode_int64(keys.dup, camera_count, tile_width, tile_height)
+    end
   end
 
   if Native.available?
@@ -78,6 +114,12 @@ module Gsplat
       :fully_fused_projection_backward,
       :native,
       Backend::RubyProjectionBackward.method(:backward)
+    )
+    Backend.register(:isect_tiles, :native, NativeOps.method(:isect_tiles))
+    Backend.register(
+      :isect_offset_encode,
+      :native,
+      NativeOps.method(:isect_offset_encode)
     )
   end
 end

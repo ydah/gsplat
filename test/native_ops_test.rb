@@ -33,6 +33,27 @@ class NativeOpsTest < Minitest::Test
     end
   end
 
+  def test_intersections_and_offsets_match_ruby_backend
+    means2d = Numo::SFloat[[[8, 8], [24, 8], [16, 8]]]
+    radii = Numo::Int32[[[4, 12], [4, 4], [8, 4]]]
+    depths = Numo::SFloat[[2, 1, 3]]
+    expected = with_backend(:ruby) do
+      Gsplat.isect_tiles(means2d, radii, depths, 16, 2, 1)
+    end
+    actual = with_backend(:native) do
+      Gsplat.isect_tiles(means2d, radii, depths, 16, 2, 1)
+    end
+
+    expected.zip(actual).each { |ruby_output, native_output| assert_equal ruby_output.to_a, native_output.to_a }
+    expected_offsets = with_backend(:ruby) do
+      Gsplat.isect_offset_encode(expected[1], 1, 2, 1)
+    end
+    actual_offsets = with_backend(:native) do
+      Gsplat.isect_offset_encode(actual[1], 1, 2, 1)
+    end
+    assert_equal expected_offsets.to_a, actual_offsets.to_a
+  end
+
   private
 
   def project(camera_model)

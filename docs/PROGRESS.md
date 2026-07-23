@@ -30,6 +30,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P9-1 | Complete | 2026-07-23 | Inria PLY writer and arbitrary-order ASCII/binary little-endian reader |
 | P9-2 | Complete | 2026-07-23 | COLMAP bin/txt cameras, images and 100-point fixture with pose conversion |
 | P9-3 | Complete (golden pending) | 2026-07-23 | k-NN initialization, SH color helpers, scene scale and differentiable SSIM |
+| P9-4 | Complete | 2026-07-23 | NPZ training checkpoints and vips/chunky_png RGB image IO |
 
 ## Phase gates
 

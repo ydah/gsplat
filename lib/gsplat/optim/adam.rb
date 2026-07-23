@@ -117,7 +117,34 @@ module Gsplat
         self
       end
 
+      # Restores one parameter group's moments from a checkpoint.
+      def load_state!(name = nil, step:, exp_avg:, exp_avg_sq:)
+        key = name ? name.to_sym : single_group_name
+        group = groups.fetch(key)
+        expected = group.variable.data.shape
+        unless exp_avg.shape == expected && exp_avg_sq.shape == expected
+          raise ShapeError,
+                "Adam state for #{key} expected #{expected.inspect}, " \
+                "got #{exp_avg.shape.inspect} and #{exp_avg_sq.shape.inspect}"
+        end
+        raise ArgumentError, "Adam step must be a non-negative integer" unless step.is_a?(Integer) && !step.negative?
+
+        type = group.variable.data.class
+        @states[key] = State.new(
+          step: step,
+          exp_avg: type.cast(exp_avg).dup,
+          exp_avg_sq: type.cast(exp_avg_sq).dup
+        )
+        self
+      end
+
       private
+
+      def single_group_name
+        return groups.keys.first if groups.length == 1
+
+        raise ArgumentError, "group name is required for a multi-group Adam optimizer"
+      end
 
       def validate_hyperparameters!(learning_rate, epsilon)
         valid_betas = [beta1, beta2].all? { |value| value >= 0 && value < 1 }

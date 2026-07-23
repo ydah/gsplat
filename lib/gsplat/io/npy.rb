@@ -14,6 +14,7 @@ module Gsplat
       DESCRIPTORS = {
         Numo::SFloat => ["<f4", "e*", 4],
         Numo::DFloat => ["<f8", "E*", 8],
+        Numo::UInt8 => ["|u1", "C*", 1],
         Numo::Int32 => ["<i4", "l<*", 4],
         Numo::Int64 => ["<i8", "q<*", 8],
         Numo::Bit => ["|b1", "C*", 1]

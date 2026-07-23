@@ -7,6 +7,7 @@ class NpyTest < Minitest::Test
   DTYPES = {
     Numo::SFloat => [[1.25, -2.5], [3.75, 4.0]],
     Numo::DFloat => [[1.25, -2.5], [3.75, 4.0]],
+    Numo::UInt8 => [[1, 2], [3, 255]],
     Numo::Int32 => [[1, -2], [3, 4]],
     Numo::Int64 => [[1, -2], [3, 4]],
     Numo::Bit => [[1, 0], [0, 1]]

@@ -48,6 +48,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P11-10 | Complete (golden pending) | 2026-07-24 | Iterative per-pixel Gaussian contribution-index enumeration |
 | P12-1 | Complete | 2026-07-24 | README/Migration guide, executable quick start, example smoke tests and 100% public YARD coverage |
 | P12-2 | Complete (external gates recorded) | 2026-07-24 | Design workloads, benchmark results, enabled CI matrix and G1–G6 acceptance report |
+| P12-3 | Ready (license confirmation pending) | 2026-07-24 | Version 1.0.0, release metadata, gem build and clean native install/render verified |
 
 ## Phase gates
 
@@ -184,3 +185,15 @@ This file is the restart point for implementation sessions. Read it after `READM
 - CI now runs Ruby 3.2–4.0, native build/full suite, documentation, and focused E2E jobs.
 - Ruby and native selections: 188 tests, 1,041 assertions, no failures, 22 documented skips.
 - YARD: undocumented 0 (100%). RuboCop: 132 files, no offenses. Workflow YAML parses successfully.
+
+### P12-3 — Ready (license confirmation pending)
+
+- Version 1.0.0, release metadata, a bounded runtime dependency, and the release file manifest are
+  covered by `test/gemspec_test.rb`.
+- `gem build gsplat.gemspec` produces `gsplat-1.0.0.gem`. Installing that artifact into an empty
+  temporary gem home compiles and loads the native extension, then completes a 1×1 render without
+  loading files from the working tree.
+- Ruby and native selections: 191 tests, 1,063 assertions, no failures, 22 documented skips.
+- YARD: undocumented 0 (100%). RuboCop: 133 files, no offenses.
+- The current MIT license remains unchanged until the explicit P12-3 Apache-2.0 confirmation is
+  received. No gem has been published.

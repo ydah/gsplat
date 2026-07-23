@@ -9,20 +9,24 @@ Gem::Specification.new do |spec|
   spec.email = ["t.yudai92@gmail.com"]
 
   spec.summary = "Differentiable 3D Gaussian splatting for Ruby"
-  spec.description = "A Numo::NArray implementation of differentiable 3D Gaussian splatting."
+  spec.description = "A CPU differentiable 3D Gaussian splatting renderer, trainer, and IO toolkit " \
+                     "with Numo::NArray and optional OpenMP acceleration."
+  spec.homepage = "https://github.com/ydah/gsplat"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
   spec.metadata["rubygems_mfa_required"] = "true"
+  spec.metadata["source_code_uri"] = spec.homepage
+  spec.metadata["documentation_uri"] = "https://rubydoc.info/gems/gsplat/#{spec.version}"
 
-  # Specify which files should be added to the gem when it is released.
-  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
-  gemspec = File.basename(__FILE__)
+  release_files = %w[LICENSE.txt README.md gsplat.gemspec]
+  release_roots = %w[docs/ examples/ ext/ lib/]
   spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
-    ls.readlines("\x0", chomp: true).reject do |f|
-      (f == gemspec) ||
-        f.start_with?(*%w[bin/ Gemfile .gitignore .rspec spec/ test/ .github/])
+    ls.readlines("\x0", chomp: true).select do |file|
+      release_files.include?(file) || file.start_with?(*release_roots)
     end
   end
+  spec.files |= release_files.select { |file| File.file?(File.join(__dir__, file)) }
+  spec.extra_rdoc_files = %w[README.md LICENSE.txt]
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.extensions = ["ext/gsplat_native/extconf.rb"]

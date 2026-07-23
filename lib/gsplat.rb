@@ -28,6 +28,7 @@ require_relative "gsplat/optim/adam"
 require_relative "gsplat/optim/lr_scheduler"
 require_relative "gsplat/strategy/base"
 require_relative "gsplat/strategy/ops"
+require_relative "gsplat/strategy/default"
 require_relative "gsplat/io/npy"
 
 # Differentiable 3D Gaussian splatting for Ruby.

@@ -4,6 +4,7 @@ require "logger"
 require "numo/narray"
 
 require_relative "gsplat/version"
+require_relative "gsplat/backend"
 
 # Differentiable 3D Gaussian splatting for Ruby.
 module Gsplat
@@ -26,6 +27,21 @@ module Gsplat
     # @return [Random]
     def rng
       @rng ||= Random.new
+    end
+
+    # Active operation backend.
+    #
+    # @return [Symbol] :auto, :ruby, or :native
+    def backend
+      @backend ||= Backend.normalize_backend(ENV.fetch("GSPLAT_BACKEND", "auto"))
+    end
+
+    # Selects the operation backend.
+    #
+    # @param value [Symbol, String] :auto, :ruby, or :native
+    # @return [Symbol] normalized backend
+    def backend=(value)
+      @backend = Backend.normalize_backend(value)
     end
   end
 end

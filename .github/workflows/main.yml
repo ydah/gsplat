@@ -5,6 +5,9 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 18 * * 1"
 
 permissions:
   contents: read
@@ -21,6 +24,8 @@ jobs:
           ruby-version: "4.0"
           bundler-cache: true
       - run: bundle exec rubocop --no-server
+      - name: Verify public API documentation
+        run: bundle exec yard stats --list-undoc | tail -1 | grep -Fx " 100.00% documented"
 
   ruby-test:
     runs-on: ubuntu-latest
@@ -45,13 +50,35 @@ jobs:
           GSPLAT_BACKEND: ruby
 
   native-test:
-    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Enabled after P10-1 adds the native extension"
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+      - run: bundle exec rake compile
+      - run: bundle exec rake test
+        env:
+          GSPLAT_BACKEND: native
+          OMP_NUM_THREADS: "2"
 
   e2e:
-    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Enabled after P7-2 adds the fit-image test"
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+      - name: Run fitting, trainer, and example smoke tests
+        run: >-
+          bundle exec ruby -Itest test/training/image_fitter_test.rb &&
+          bundle exec ruby -Itest test/training/trainer_test.rb &&
+          bundle exec ruby -Itest test/examples_cli_test.rb
+        env:
+          GSPLAT_BACKEND: ruby

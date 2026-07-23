@@ -19,10 +19,10 @@ class ImageFitterTest < Minitest::Test
       n_gaussians: 64,
       learning_rate: 20.0,
       seed: 7
-    ).fit(steps: 12)
+    ).fit(steps: 20)
 
     assert_operator result.final_psnr, :>, result.initial_psnr
-    assert_operator result.final_psnr, :>, 20.0
+    assert_operator result.final_psnr, :>=, 30.0
     result.history.each_cons(2) do |previous, current|
       assert_operator current, :>=, previous - 1e-10
     end

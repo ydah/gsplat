@@ -47,6 +47,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 | P11-9 | Complete (golden pending) | 2026-07-24 | World-space color evaluation, ray-facing accumulated normals and numerical VJPs |
 | P11-10 | Complete (golden pending) | 2026-07-24 | Iterative per-pixel Gaussian contribution-index enumeration |
 | P12-1 | Complete | 2026-07-24 | README/Migration guide, executable quick start, example smoke tests and 100% public YARD coverage |
+| P12-2 | Complete (external gates recorded) | 2026-07-24 | Design workloads, benchmark results, enabled CI matrix and G1–G6 acceptance report |
 
 ## Phase gates
 
@@ -171,3 +172,15 @@ This file is the restart point for implementation sessions. Read it after `READM
 - `yard stats`: 40 files, 129 methods, 124 attributes, 22 constants, undocumented 0 (100%).
 - Ruby and native selections: 186 tests, 1,005 assertions, no failures, 22 documented skips.
 - RuboCop: 130 files, no offenses.
+
+### P12-2 — Complete (external validation pending)
+
+- The 100k/800×800 workload passes all timing targets: Ruby 3,527.990/8,047.024 ms and
+  native 30.419/112.573 ms for forward/combined forward+backward.
+- The full 50k/512²/2,000-step native image fit completes in 157.457 seconds versus the
+  30-minute target. The COLMAP benchmark path completes a one-step fixture smoke run.
+- `docs/BENCHMARKS.md` records commands and limitations; `docs/ACCEPTANCE.md` maps G1–G6 to evidence.
+  CUDA golden parity (G1/G2) and real-capture 30k quality (G4) remain explicit external gates.
+- CI now runs Ruby 3.2–4.0, native build/full suite, documentation, and focused E2E jobs.
+- Ruby and native selections: 188 tests, 1,041 assertions, no failures, 22 documented skips.
+- YARD: undocumented 0 (100%). RuboCop: 132 files, no offenses. Workflow YAML parses successfully.

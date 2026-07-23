@@ -28,23 +28,29 @@ module Gsplat
       # @param path [String] dataset root containing `sparse` and `images`
       # @param data_factor [Numeric] image/intrinsics downsampling factor
       # @return [Scene]
+      # rubocop:disable Metrics/AbcSize
       def self.from_colmap(path, data_factor: 1)
         dataset = IO::Colmap.read(path, data_factor: data_factor)
         records = dataset.images.values.sort_by(&:name)
-        views = stack(records.map(&:world_to_camera))
-        intrinsics = stack(records.map { |record| dataset.cameras.fetch(record.camera_id).intrinsics })
+        views = Numo::SFloat.cast(stack(records.map(&:world_to_camera)))
+        intrinsics = Numo::SFloat.cast(
+          stack(records.map { |record| dataset.cameras.fetch(record.camera_id).intrinsics })
+        )
         image_directory = resolve_image_directory(path, data_factor)
-        images = stack(records.map { |record| IO::Image.read(File.join(image_directory, record.name)) })
+        images = Numo::SFloat.cast(
+          stack(records.map { |record| IO::Image.read(File.join(image_directory, record.name)) })
+        )
         points = dataset.points3d.values.sort_by(&:id)
         new(
           viewmats: views,
           intrinsics: intrinsics,
           images: images,
-          points: stack_rows(points.map(&:xyz)),
-          colors: stack_rows(points.map { |point| Numo::DFloat.cast(point.rgb) / 255.0 }),
+          points: Numo::SFloat.cast(stack_rows(points.map(&:xyz))),
+          colors: Numo::SFloat.cast(stack_rows(points.map { |point| Numo::DFloat.cast(point.rgb) / 255.0 })),
           names: records.map(&:name)
         )
       end
+      # rubocop:enable Metrics/AbcSize
 
       # Number of registered training views.
       #

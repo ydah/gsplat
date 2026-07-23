@@ -27,13 +27,17 @@ module Gsplat
         end
       end
 
-      attr_reader :height, :learning_rate, :n_gaussians, :width
+      attr_reader :dtype, :height, :learning_rate, :n_gaussians, :width
 
-      def initialize(width: 64, height: 64, n_gaussians: 2_000, learning_rate: 20.0, seed: 42)
+      # rubocop:disable Metrics/ParameterLists
+      def initialize(width: 64, height: 64, n_gaussians: 2_000, learning_rate: 20.0,
+                     seed: 42, dtype: Numo::SFloat)
+        # rubocop:enable Metrics/ParameterLists
         @width = width
         @height = height
         @n_gaussians = n_gaussians
         @learning_rate = learning_rate
+        @dtype = dtype
         @rng = Random.new(seed)
         validate_options!
         build_scene
@@ -68,19 +72,22 @@ module Gsplat
         invalid = values.find { |_name, value| !value.is_a?(Integer) || !value.positive? }
         raise ArgumentError, "#{invalid[0]} must be a positive integer" if invalid
         raise ArgumentError, "learning_rate must be positive" unless learning_rate.positive?
+        return if [Numo::SFloat, Numo::DFloat].include?(dtype)
+
+        raise ArgumentError, "dtype must be Numo::SFloat or Numo::DFloat"
       end
 
       # rubocop:disable Metrics/AbcSize
       def build_scene
-        @means = Numo::DFloat.zeros(n_gaussians, 3)
-        @quaternions = Numo::DFloat.zeros(n_gaussians, 4)
+        @means = dtype.zeros(n_gaussians, 3)
+        @quaternions = dtype.zeros(n_gaussians, 4)
         @quaternions[true, 0] = 1
-        @scales = Numo::DFloat.zeros(n_gaussians, 3)
-        @opacities = Numo::DFloat.ones(n_gaussians) * 0.85
-        @viewmats = Numo::DFloat.zeros(1, 4, 4)
-        @viewmats[0, true, true] = Numo::DFloat.eye(4)
+        @scales = dtype.zeros(n_gaussians, 3)
+        @opacities = dtype.ones(n_gaussians) * 0.85
+        @viewmats = dtype.zeros(1, 4, 4)
+        @viewmats[0, true, true] = dtype.eye(4)
         focal = [width, height].max.to_f
-        @intrinsics = Numo::DFloat[[[focal, 0, width / 2.0], [0, focal, height / 2.0], [0, 0, 1]]]
+        @intrinsics = dtype.cast([[[focal, 0, width / 2.0], [0, focal, height / 2.0], [0, 0, 1]]])
         side = ::Math.sqrt(n_gaussians).ceil
         n_gaussians.times do |index|
           grid_x = index % side
@@ -101,7 +108,7 @@ module Gsplat
       # rubocop:enable Metrics/AbcSize
 
       def teacher_colors(side)
-        output = Numo::DFloat.zeros(n_gaussians, 3)
+        output = dtype.zeros(n_gaussians, 3)
         n_gaussians.times do |index|
           x_coord = (index % side).to_f / [side - 1, 1].max
           y_coord = (index / side).to_f / [side - 1, 1].max
@@ -112,7 +119,7 @@ module Gsplat
 
       def initial_colors
         values = Array.new(n_gaussians * 3) { 0.35 + (@rng.rand * 0.3) }
-        Numo::DFloat.cast(values).reshape(n_gaussians, 3)
+        dtype.cast(values).reshape(n_gaussians, 3)
       end
 
       def render(colors)

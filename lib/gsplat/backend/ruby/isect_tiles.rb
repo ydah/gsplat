@@ -43,7 +43,8 @@ module Gsplat
           tile_bits
         )
         if sort && intersection_count.positive?
-          order = isect_ids.sort_index
+          keys = isect_ids.to_a
+          order = (0...intersection_count).sort_by { |index| [keys[index], index] }
           isect_ids = isect_ids[order].dup
           flatten_ids = flatten_ids[order].dup
         end

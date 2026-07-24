@@ -38,11 +38,17 @@ module GsplatTestHelpers
   end
 
   def with_backend(backend)
+    if backend == :native && !Gsplat::Native.available?
+      skip "run bundle exec rake compile to build the native extension"
+    end
+
     previous = Gsplat.backend
-    Gsplat.backend = backend
-    yield
-  ensure
-    Gsplat.backend = previous
+    begin
+      Gsplat.backend = backend
+      yield
+    ensure
+      Gsplat.backend = previous
+    end
   end
 
   private

@@ -29,7 +29,6 @@ jobs:
 
   ruby-test:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
@@ -49,10 +48,13 @@ jobs:
         with:
           persist-credentials: false
       - uses: ruby/setup-ruby@v1
+        id: ruby_setup
+        continue-on-error: ${{ matrix.experimental }}
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
       - run: bundle exec rake test
+        if: steps.ruby_setup.outcome == 'success'
         env:
           GSPLAT_BACKEND: ruby
 

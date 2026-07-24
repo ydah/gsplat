@@ -5,17 +5,18 @@ require "fileutils"
 require "optparse"
 require "gsplat"
 
+sample_data = File.expand_path("data/colmap", __dir__)
 options = {
-  data: nil,
-  output_dir: "results",
-  max_steps: 30_000,
+  data: sample_data,
+  output_dir: nil,
+  max_steps: nil,
   data_factor: 1,
   strategy: "default",
   dry_run: false
 }
 parser = OptionParser.new do |options_parser|
-  options_parser.banner = "Usage: bundle exec ruby examples/simple_trainer.rb --data PATH [options]"
-  options_parser.on("--data PATH", "COLMAP dataset root") { |value| options[:data] = value }
+  options_parser.banner = "Usage: bundle exec ruby examples/simple_trainer.rb [options]"
+  options_parser.on("--data PATH", "COLMAP dataset root (default: bundled sample)") { |value| options[:data] = value }
   options_parser.on("--output PATH") { |value| options[:output_dir] = value }
   options_parser.on("--steps N", Integer) { |value| options[:max_steps] = value }
   options_parser.on("--data-factor N", Integer) { |value| options[:data_factor] = value }
@@ -27,7 +28,10 @@ parser = OptionParser.new do |options_parser|
   end
 end
 parser.parse!
-abort "error: --data is required" unless options[:data]
+
+using_sample = File.expand_path(options.fetch(:data)) == sample_data
+options[:output_dir] ||= using_sample ? "results/sample" : "results"
+options[:max_steps] ||= using_sample ? 10 : 30_000
 
 if options.fetch(:dry_run)
   dataset = Gsplat::IO::Colmap.read(options.fetch(:data), data_factor: options.fetch(:data_factor))

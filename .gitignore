@@ -6,6 +6,8 @@
 /coverage/
 /doc/
 /pkg/
+/renders/
+/results/
 /spec/reports/
 /tmp/
 Gemfile.lock

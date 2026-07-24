@@ -1,0 +1,2 @@
+# One PINHOLE camera shared by all sample views.
+1 PINHOLE 16 16 16 16 8 8

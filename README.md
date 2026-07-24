@@ -47,7 +47,8 @@ gem install gsplat
 - OpenMP is optional and enables parallel native raster kernels.
 - Image loading and writing require either `ruby-vips` (recommended) or `chunky_png`.
 
-JRuby and TruffleRuby are not release targets.
+The source checkout includes `chunky_png` for its runnable examples. JRuby and TruffleRuby are not
+release targets.
 
 ### Backend selection
 
@@ -118,12 +119,29 @@ From a source checkout, run the deterministic image-fitting example:
 bundle exec ruby examples/fit_image.rb --gaussians 2000 --steps 300
 ```
 
+### Runnable sample data
+
+The repository includes a tiny synthetic COLMAP dataset and its matching Inria PLY, so the
+multi-view examples run without downloading external data or supplying arguments:
+
+```bash
+bundle exec ruby examples/simple_trainer.rb
+bundle exec ruby examples/render_path.rb
+```
+
+The trainer uses 10 steps and writes `results/sample/splats.ply`. The renderer creates 12 images in
+`renders/sample/` from the bundled PLY. To render the newly trained PLY instead, pass
+`--ply results/sample/splats.ply`. Rebuild the checked-in data at any time with:
+
+```bash
+bundle exec ruby examples/generate_sample_data.rb
+```
+
 ### Training a COLMAP capture
 
 Prepare `sparse/0/{cameras,images,points3D}.bin` and an `images/` directory, then run:
 
 ```bash
-gem install ruby-vips # or: gem install chunky_png
 bundle exec ruby examples/simple_trainer.rb \
   --data /path/to/capture \
   --output results/capture \

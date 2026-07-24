@@ -5,10 +5,11 @@ require "fileutils"
 require "optparse"
 require "gsplat"
 
-options = { ply: nil, output: "renders", frames: 60, width: 512, height: 512, dry_run: false }
+sample_ply = File.expand_path("data/splats.ply", __dir__)
+options = { ply: sample_ply, output: nil, frames: nil, width: nil, height: nil, dry_run: false }
 parser = OptionParser.new do |options_parser|
-  options_parser.banner = "Usage: bundle exec ruby examples/render_path.rb --ply FILE [options]"
-  options_parser.on("--ply FILE") { |value| options[:ply] = value }
+  options_parser.banner = "Usage: bundle exec ruby examples/render_path.rb [options]"
+  options_parser.on("--ply FILE", "Inria PLY file (default: bundled sample)") { |value| options[:ply] = value }
   options_parser.on("--output PATH") { |value| options[:output] = value }
   options_parser.on("--frames N", Integer) { |value| options[:frames] = value }
   options_parser.on("--width N", Integer) { |value| options[:width] = value }
@@ -22,7 +23,12 @@ parser = OptionParser.new do |options_parser|
   end
 end
 parser.parse!
-abort "error: --ply is required" unless options[:ply]
+
+using_sample = File.expand_path(options.fetch(:ply)) == sample_ply
+options[:output] ||= using_sample ? "renders/sample" : "renders"
+options[:frames] ||= using_sample ? 12 : 60
+options[:width] ||= using_sample ? 64 : 512
+options[:height] ||= using_sample ? 64 : 512
 
 def normalize(vector)
   length = Math.sqrt(vector.sum { |value| value * value })
@@ -104,3 +110,8 @@ options.fetch(:frames).times do |frame|
   path = File.join(options.fetch(:output), format("frame_%04d.png", frame))
   Gsplat::IO::Image.write(path, rendered[0, true, true, true])
 end
+warn format(
+  "render complete: frames=%<frames>d output=%<output>s",
+  frames: options.fetch(:frames),
+  output: options.fetch(:output)
+)

@@ -131,8 +131,8 @@ This file is the restart point for implementation sessions. Read it after `READM
 - Inria PLY and COLMAP bin/txt parsing pass round-trip and paired-fixture tests.
 - k-NN initialization, scene scale, L1/SSIM/PSNR, checkpoint restart, and optional image backends pass.
 - The eight-view synthetic Trainer E2E exceeds 28 dB in 80 steps; the production default remains 30,000 steps.
-- `simple_trainer.rb` and `render_path.rb` provide the documented real-COLMAP workflow.
-- L3 SSIM remains pending golden generation; optional image tests skip under Bundler when neither backend is declared.
+- `simple_trainer.rb` and `render_path.rb` provide the documented real-COLMAP workflow and bundled sample data.
+- L3 SSIM remains pending golden generation; the source bundle uses chunky_png to exercise image IO.
 - Full suite: 131 tests, 817 assertions, no failures, 14 documented skips.
 - RuboCop: no offenses.
 

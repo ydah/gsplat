@@ -2,6 +2,7 @@
 
 require "open3"
 require "rbconfig"
+require "tmpdir"
 require "test_helper"
 
 class ExamplesCliTest < Minitest::Test
@@ -28,33 +29,76 @@ class ExamplesCliTest < Minitest::Test
     assert_includes error, "fit complete:"
   end
 
-  def test_simple_trainer_validates_colmap_fixture
+  def test_simple_trainer_validates_bundled_sample
     _output, error, status = run_example(
       "examples/simple_trainer.rb",
-      "--data", "test/fixtures/colmap/binary",
       "--dry-run"
     )
 
     assert_predicate status, :success?, error
-    assert_includes error, "cameras=3 images=3 points=100"
+    assert_includes error, "cameras=1 images=3 points=16"
   end
 
-  def test_render_path_validates_ply_fixture
+  def test_render_path_validates_bundled_sample
     _output, error, status = run_example(
       "examples/render_path.rb",
-      "--ply", "test/fixtures/inria_ascii.ply",
       "--frames", "2",
       "--dry-run"
     )
 
     assert_predicate status, :success?, error
-    assert_match(/gaussians=\d+ frames=2 degree=\d+/, error)
+    assert_includes error, "gaussians=16 frames=2 degree=0"
+  end
+
+  def test_simple_trainer_trains_bundled_sample
+    Dir.mktmpdir do |directory|
+      _output, error, status = run_example(
+        "examples/simple_trainer.rb",
+        "--output", directory,
+        "--steps", "1"
+      )
+
+      assert_predicate status, :success?, error
+      assert_path_exists File.join(directory, "splats.ply")
+    end
+  end
+
+  def test_render_path_renders_bundled_sample
+    Dir.mktmpdir do |directory|
+      _output, error, status = run_example(
+        "examples/render_path.rb",
+        "--output", directory,
+        "--frames", "1"
+      )
+
+      assert_predicate status, :success?, error
+      assert_path_exists File.join(directory, "frame_0000.png")
+    end
+  end
+
+  def test_sample_data_generator_writes_colmap_and_ply_assets
+    Dir.mktmpdir do |directory|
+      _output, error, status = run_example(
+        "examples/generate_sample_data.rb",
+        "--output", directory
+      )
+
+      assert_predicate status, :success?, error
+      assert_path_exists File.join(directory, "colmap", "images", "view_000.png")
+      assert_path_exists File.join(directory, "colmap", "sparse", "0", "cameras.txt")
+      assert_path_exists File.join(directory, "splats.ply")
+    end
   end
 
   private
 
   def example_paths
-    %w[examples/fit_image.rb examples/simple_trainer.rb examples/render_path.rb]
+    %w[
+      examples/fit_image.rb
+      examples/generate_sample_data.rb
+      examples/simple_trainer.rb
+      examples/render_path.rb
+    ]
   end
 
   def run_example(path, *)

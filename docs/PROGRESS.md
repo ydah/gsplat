@@ -193,7 +193,7 @@ This file is the restart point for implementation sessions. Read it after `READM
 - `gem build gsplat.gemspec` produces `gsplat-1.0.0.gem`. Installing that artifact into an empty
   temporary gem home compiles and loads the native extension, then completes a 1×1 render without
   loading files from the working tree.
-- Ruby and native selections: 194 tests, 1,163 assertions, no failures, 22 documented skips.
+- Ruby and native selections: 195 tests, 1,164 assertions, no failures, 22 documented skips.
 - YARD: undocumented 0 (100%). RuboCop: 134 files, no offenses.
 - Following explicit confirmation, the source license and gem metadata use Apache-2.0. No gem has
   been published.

@@ -52,6 +52,24 @@ class IsectTilesTest < Minitest::Test
     assert_equal [0, 1, 0, 1], tile_ids
   end
 
+  def test_sort_order_is_consistent_across_four_tiles
+    means2d = Numo::DFloat[[[5.5, 6.5], [12.5, 10.5], [17.5, 15.5]]]
+    radii = Numo::Int32[[100, 100, 100]]
+    depths = Numo::DFloat[[1, 2, 3]]
+
+    _, isect_ids, flatten_ids = Gsplat.isect_tiles(
+      means2d,
+      radii,
+      depths,
+      16,
+      2,
+      2
+    )
+
+    assert_equal isect_ids.to_a.sort, isect_ids.to_a
+    assert_equal [0, 1, 2] * 4, flatten_ids.to_a
+  end
+
   def test_offset_encode_uses_prefix_offsets_for_empty_tiles
     keys = Numo::Int64[
       intersection_key(0, 1, 1, 2),

@@ -189,8 +189,8 @@ bundle exec yard stats
 
 Golden-data generation is pinned to Python gsplat 1.5.3. This repository's CPU-only development host
 cannot generate CUDA raster fixtures; the generator, exact commands, and documented skips are in
-[tools/README.md](tools/README.md). Implementation differences are recorded in
-[docs/DECISIONS.md](docs/DECISIONS.md), and phase evidence is tracked in
+[tools/README.md](tools/README.md). Implementation differences and architectural decisions are
+recorded as ADRs in [docs/DECISIONS.md](docs/DECISIONS.md), and phase evidence is tracked in
 [docs/PROGRESS.md](docs/PROGRESS.md). See [docs/BENCHMARKS.md](docs/BENCHMARKS.md) for measured
 performance and [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md) for the G1–G6 status.
 

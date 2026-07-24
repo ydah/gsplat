@@ -16,7 +16,8 @@ class GemspecTest < Minitest::Test
   end
 
   def test_release_file_manifest
-    %w[LICENSE.txt README.md gsplat.gemspec lib/gsplat.rb ext/gsplat_native/extconf.rb].each do |path|
+    %w[LICENSE.txt README.md docs/DECISIONS.md docs/decisions/0000-template.md
+       gsplat.gemspec lib/gsplat.rb ext/gsplat_native/extconf.rb].each do |path|
       assert_includes @specification.files, path
     end
     refute(@specification.files.any? { |path| path.start_with?("test/") })

@@ -1,77 +1,52 @@
-# Design Decisions
+# Architecture Decision Records
 
-Record only decisions that differ from, clarify, or resolve ambiguity in the design documents.
+Architecture Decision Records (ADRs) capture significant technical decisions, their context, and
+their consequences. The individual records live in [`docs/decisions/`](decisions/) and are never
+deleted; a later ADR supersedes an earlier decision when the architecture changes.
 
-## Entries
+This structure follows the concise format used by
+[ydah/ibex](https://github.com/ydah/ibex/tree/main/docs/decisions).
 
-### 2026-07-23: Golden reference version and CPU scope (P0-4)
+## Index
 
-- Pin Python reference data to the latest official release, `gsplat==1.5.3` (tag commit
-  `937e29912570c372bed6747a5c9bf85fed877bae`), instead of a moving `main` branch.
-- Upstream 1.5.3 returns elliptical radii shaped `[C,N,2]`; projection and golden files use that
-  public shape. The low-level intersection operation still accepts legacy scalar radii.
-- Upstream 1.5.3 does not expose rasterizer `last_ids`. Raster goldens therefore store public outputs,
-  all public input gradients, and `means2d.absgrad`, but no `last_ids`.
-- This development host has no PyTorch/gsplat installation or CUDA device. Per P0-4's alternate DoD,
-  the dependency-free dry run is the local acceptance gate. `tools/README.md` documents CPU partial
-  generation and the required CUDA command for committing the complete golden set.
+| ADR | Status | Date | Decision |
+|---|---|---|---|
+| [0001](decisions/0001-pin-golden-reference-and-cpu-validation.md) | Accepted | 2026-07-23 | Pin the golden reference and define CPU-only validation |
+| [0002](decisions/0002-retain-ruby-fallbacks-for-native-backend.md) | Accepted | 2026-07-23 | Retain exact Ruby fallbacks for the native backend |
+| [0003](decisions/0003-share-projection-for-distorted-cameras.md) | Accepted | 2026-07-23 | Share the Ruby projection for distorted cameras |
+| [0004](decisions/0004-use-portable-world-space-reference-paths.md) | Accepted | 2026-07-24 | Use one portable reference for world-space extension paths |
+| [0005](decisions/0005-reuse-ewa-core-for-2dgs.md) | Accepted | 2026-07-24 | Reuse the differentiable EWA core for 2DGS |
+| [0006](decisions/0006-keep-eval3d-as-portable-reference.md) | Accepted | 2026-07-24 | Keep eval3d as a portable reference path |
+| [0007](decisions/0007-share-compositor-semantics-for-contribution-indices.md) | Accepted | 2026-07-24 | Share compositor semantics for contribution indices |
+## When an ADR is required
 
-### 2026-07-23: Native paths retain exact Ruby fallbacks (P10)
+Write an ADR when a change introduces a meaningful trade-off or establishes a long-lived contract,
+including:
 
-- Native kernels target contiguous `Numo::SFloat`, the production training dtype.
-- Float64 gradchecks, masked SH, and analytic projection/SH backward continue through the Ruby
-  implementation. The `:native` backend remains functionally complete while avoiding a second,
-  divergent copy of derivative formulas.
-- Performance reports label these paths as hybrid and measure each accelerated operation explicitly.
-- Raster backward uses OpenMP atomic scatter-add instead of per-worker full gradient buffers. The
-  100k/800×800 benchmark scales from 279.790 ms at one thread to 79.252 ms at eight threads while
-  avoiding `O(workers × N × channels)` temporary memory.
+- public API, serialized format, or compatibility policy changes;
+- backend ownership, fallback, precision, or performance boundaries;
+- algorithm choices whose rejected alternatives may be reconsidered;
+- validation policy changes or accepted differences from the upstream implementation;
+- decisions that supersede or deprecate an existing ADR.
 
-### 2026-07-23: Distorted cameras use the shared Ruby projection (P11-5)
+Routine implementation details that follow an accepted decision do not need another ADR.
 
-- Equidistant fisheye and OpenCV radial/tangential/thin-prism projection use one float32/float64
-  implementation for both backends. Selecting `:native` delegates these camera models to the Ruby
-  path so camera semantics and numerical derivatives cannot diverge.
-- Pinhole radial coefficients follow gsplat 1.5.3's rational order: `k1..k3` form the numerator and
-  `k4..k6` form the denominator. Fisheye coefficients multiply `theta^3..theta^9`.
-- Distortion coefficients are calibration constants. Gradients are provided for Gaussian geometry,
-  while coefficient and intrinsic optimization remain outside this phase.
+## Creating an ADR
 
-### 2026-07-24: World-space extension paths prioritize one exact reference (P11-6)
+1. Copy [`0000-template.md`](decisions/0000-template.md).
+2. Use the next four-digit number and a lowercase kebab-case filename:
+   `NNNN-short-decision-title.md`.
+3. Keep the title number equal to the filename number and use an ISO `YYYY-MM-DD` date.
+4. Add the ADR to the index in the same change.
+5. Run `bundle exec ruby -Itest test/architecture_decision_records_test.rb`.
 
-- Hit-distance modes evaluate the anisotropic Gaussian in world space and replace the final feature
-  channel with the per-pixel closest-approach distance, matching the upstream eval3d definition.
-- The same Ruby implementation serves both backends. Its geometry VJP uses float64/float32 central
-  differences so the extended path remains differentiable without maintaining a second derivative
-  implementation; the core 2D raster path retains its analytic/native backward.
-- `global_z_order: false` changes projection depths to camera-space Euclidean center distance. Near
-  and far culling continue to use camera z, and the Euclidean norm VJP is propagated to means.
+## Status lifecycle
 
-### 2026-07-24: 2DGS reuses the differentiable EWA core (P11-8)
+- `Proposed`: under review and not yet authoritative.
+- `Accepted`: active architecture.
+- `Rejected`: considered but not adopted.
+- `Deprecated`: retained for history but no longer recommended.
+- `Superseded by NNNN`: replaced by a newer ADR.
 
-- The Ruby 2DGS API preserves the upstream seven-value return structure and metadata names. Its
-  portable implementation uses the established EWA footprint/compositor, then derives oriented
-  camera normals, normalized surface normals, a depth-opacity distortion signal, and expected
-  depth as the median approximation.
-- This keeps color/alpha and Trainer optimization differentiable on both backends. Exact upstream
-  ray-splat transforms, median crossing, and distortion accumulation remain covered by the pending
-  CUDA golden gate rather than being represented as numerically identical on this CPU-only host.
-
-### 2026-07-24: Eval3d remains a portable reference path (P11-9)
-
-- `with_eval3d` generalizes the P11-6 world-space evaluator from hit distance to arbitrary color
-  features. `return_normals` accumulates the quaternion's canonical +Z axis after flipping it toward
-  the ray, using the same alpha weights as color.
-- Pinhole cameras and classic rasterization are supported. Both backend selections share this Ruby
-  evaluator and its numerical geometry VJP; the performance-oriented 2D raster kernels are unchanged.
-- The analytic single-ray case covers values and quaternion gradients locally. Full CUDA parity for
-  color, alpha, and normals remains a generated golden-data gate.
-
-### 2026-07-24: Contribution indices share compositor semantics (P11-10)
-
-- Range bounds address batches of `tile_size²` entries within each tile's sorted intersection list,
-  matching the upstream iterative rasterizer rather than indexing global intersections.
-- Enumeration preserves image-major, pixel-major, then depth order. It applies the same alpha skip,
-  clamp, and exclusive transmittance stop as the regular compositor.
-- Both backend selections use the portable Ruby enumerator. Integer outputs are analysis data and do
-  not record an autograd graph.
+Do not rewrite an accepted ADR to represent a different decision. Add a new ADR, mark the old one
+`Superseded by NNNN`, and link the records from their context or consequences.

@@ -1,4 +1,4 @@
 # Pinned reference stack for deterministic golden data.
-numpy==2.3.1
+numpy==2.5.1
 torch==2.7.1
 gsplat==1.5.3

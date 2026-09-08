@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f7f5">
+    <meta name="description" content="Gsplat is a differentiable 3D Gaussian Splatting renderer and trainer for Ruby.">
+    <meta property="og:title" content="Gsplat — 3D Gaussian Splatting for Ruby">
+    <meta property="og:description" content="Render, differentiate, and train Gaussian scenes in Ruby.">
+    <meta property="og:image" content="https://ydah.github.io/gsplat/assets/frame_0000.png">
+    <meta property="og:url" content="https://ydah.github.io/gsplat/">
+    <meta property="og:type" content="website">
+    <title>Gsplat — 3D Gaussian Splatting for Ruby</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Gsplat home">
+        <span class="brand-mark" aria-hidden="true">&#8203;</span>
+        gsplat
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#capabilities">Capabilities</a>
+        <a href="#install">Install</a>
+        <a href="https://github.com/ydah/gsplat">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="edition">Ruby gem · v1.0.0</p>
+          <h1 id="hero-title" class="balance">3D Gaussian Splatting, in Ruby.</h1>
+          <p class="hero-lede pretty">Render, differentiate, and train Gaussian scenes without leaving CRuby. A portable reference path and native OpenMP kernels share the same API.</p>
+          <div class="actions">
+            <a class="button button-primary" href="#install">Install gsplat</a>
+            <a class="button button-secondary" href="https://github.com/ydah/gsplat">Read the source</a>
+          </div>
+        </div>
+
+        <figure class="viewport">
+          <div class="viewport-bar">
+            <span>rasterization</span>
+            <span class="numeric">frame_0000</span>
+          </div>
+          <div class="render">
+            <img src="assets/frame_0000.png" alt="A Gaussian-splatted field rendered by Gsplat" width="800" height="800">
+            <span class="reticle reticle-one" aria-hidden="true">&#8203;</span>
+            <span class="reticle reticle-two" aria-hidden="true">&#8203;</span>
+            <span class="reticle reticle-three" aria-hidden="true">&#8203;</span>
+          </div>
+          <figcaption>
+            <span><strong class="numeric">16</strong> gaussians</span>
+            <span><strong class="numeric">800×800</strong> px</span>
+            <span>CPU render</span>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section class="facts" aria-label="Project facts">
+        <p><strong class="numeric">3.2+</strong><span>CRuby</span></p>
+        <p><strong>3DGS + 2DGS</strong><span>rendering</span></p>
+        <p><strong>Ruby + C</strong><span>backends</span></p>
+        <p><strong>Apache 2.0</strong><span>license</span></p>
+      </section>
+
+      <section class="section" id="capabilities" aria-labelledby="capabilities-title">
+        <div class="section-intro">
+          <h2 id="capabilities-title" class="balance">The rendering equations stay visible.</h2>
+          <p class="pretty">Use the Ruby backend to inspect the math. Switch to the packaged native extension when the same work needs more speed.</p>
+        </div>
+        <div class="capability-list">
+          <article>
+            <h3>Differentiable</h3>
+            <p class="pretty">Reverse-mode autograd covers projection, compositing, spherical harmonics, and camera parameters.</p>
+          </article>
+          <article>
+            <h3>Camera-ready</h3>
+            <p class="pretty">Pinhole, orthographic, equidistant fisheye, and OpenCV-distorted cameras use one rendering surface.</p>
+          </article>
+          <article>
+            <h3>Training included</h3>
+            <p class="pretty">Adam, SelectiveAdam, densification, MCMC strategy, COLMAP input, checkpoints, and PLY output.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="code-section" aria-labelledby="code-title">
+        <div class="code-copy">
+          <h2 id="code-title" class="balance">A complete render fits in one Ruby file.</h2>
+          <p class="pretty">The API follows familiar gsplat conventions while using Numo::NArray values throughout.</p>
+          <a class="text-link" href="https://github.com/ydah/gsplat#usage">See the full example</a>
+        </div>
+        <pre aria-label="Ruby rendering example"><code><span class="code-muted">require</span> <span class="code-string">"gsplat"</span>
+
+rendered, alphas, meta = Gsplat.rasterization(
+  means: means,
+  quats: quats,
+  scales: scales,
+  opacities: opacities,
+  colors: colors,
+  viewmats: viewmats,
+  ks: intrinsics,
+  width: <span class="code-number">512</span>,
+  height: <span class="code-number">512</span>
+)
+
+rendered.backward(gradient)</code></pre>
+      </section>
+
+      <section class="install" id="install" aria-labelledby="install-title">
+        <div>
+          <h2 id="install-title" class="balance">Start with one command.</h2>
+          <p class="pretty">Requires CRuby 3.2 or newer. The native extension is packaged with the gem; OpenMP is optional.</p>
+        </div>
+        <div class="command" aria-label="Installation command">
+          <code>gem install gsplat</code>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Gsplat is open source software by Yudai Takada.</p>
+      <a href="https://github.com/ydah/gsplat/blob/main/LICENSE.txt">Apache License 2.0</a>
+    </footer>
+  </body>
+</html>

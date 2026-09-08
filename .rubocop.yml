@@ -26,3 +26,6 @@ Metrics/PerceivedComplexity:
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes
+
+Style/DirectiveScope:
+  Enabled: false
